@@ -1,13 +1,13 @@
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
+import Bhakthi from "./Bhakthi";
 
-const Index = () => {
+const BhakthiLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <Hero />
+      <Bhakthi />
     </div>
   );
 };
 
-export default Index;
+export default BhakthiLayout;
