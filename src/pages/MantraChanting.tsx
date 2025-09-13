@@ -218,7 +218,7 @@ const MantraChanting = () => {
             <CardTitle className="text-center">Set Your Target</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
               {presetTargets.map((preset) => (
                 <Button
                   key={preset}
@@ -231,15 +231,17 @@ const MantraChanting = () => {
                 </Button>
               ))}
             </div>
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="text-sm text-muted-foreground">Or set custom target:</div>
               <Input
                 type="number"
                 value={target}
                 onChange={(e) => setTarget(Number(e.target.value))}
                 disabled={isListening}
-                className="w-32 text-center text-lg font-semibold"
+                className="w-40 text-center text-lg font-semibold"
                 min="1"
                 max="10000"
+                placeholder="Enter count..."
               />
             </div>
           </CardContent>
