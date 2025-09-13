@@ -93,7 +93,14 @@ const MantraChanting = () => {
       id: Date.now().toString(),
       target,
       completed: true,
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      })
     };
     
     const updatedAchievements = [...achievements, newAchievement];
@@ -321,36 +328,59 @@ const MantraChanting = () => {
           </CardContent>
         </Card>
 
-        {/* Achievements */}
+        {/* Achievements Panel - Enhanced with Date/Time */}
         {achievements.length > 0 && (
           <Card className="shadow-sacred">
             <CardHeader>
-              <CardTitle className="text-center">🏆 Achievements</CardTitle>
+              <CardTitle className="text-center flex items-center justify-center gap-2">
+                🏆 Recent Achievements
+                <Badge variant="secondary" className="ml-2">
+                  {achievements.length} total
+                </Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {achievements.slice(-10).reverse().map((achievement) => (
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {achievements.slice(-15).reverse().map((achievement, index) => (
                   <div
                     key={achievement.id}
-                    className="flex justify-between items-center p-3 bg-muted/50 rounded-lg"
+                    className="flex justify-between items-center p-4 bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg border border-muted hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">🕉️</span>
-                      <div>
-                        <div className="font-semibold">
-                          {achievement.target} Mantras
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 bg-gradient-sacred rounded-full flex items-center justify-center shadow-md">
+                          <span className="text-xl">🕉️</span>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {achievement.date}
+                      </div>
+                      <div className="flex-grow">
+                        <div className="font-bold text-lg text-foreground">
+                          {achievement.target.toLocaleString()} Mantras
+                        </div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          📅 {achievement.date}
                         </div>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      ✓ Completed
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge 
+                        variant="secondary" 
+                        className="bg-green-100 text-green-800 border-green-200"
+                      >
+                        ✓ Completed
+                      </Badge>
+                      <div className="text-xs text-muted-foreground">
+                        #{achievements.length - index}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
+              
+              {achievements.length > 15 && (
+                <div className="text-center mt-4 text-sm text-muted-foreground">
+                  Showing latest 15 of {achievements.length} achievements
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
