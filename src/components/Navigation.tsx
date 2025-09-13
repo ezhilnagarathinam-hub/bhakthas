@@ -11,6 +11,7 @@ const Navigation = () => {
     { name: "Home", path: "/", icon: Home },
     { name: "Pooja Products", path: "/products", icon: ShoppingBag },
     { name: "Test My Bhakthi", path: "/bhakthi", icon: MapPin },
+    { name: "Mantra Chanting", path: "/mantra", icon: () => <span className="text-lg">🕉️</span> },
   ];
 
   return (
