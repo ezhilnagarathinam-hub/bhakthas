@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -31,9 +32,10 @@ interface Temple {
 
 const Bhakthi = () => {
   const [temples, setTemples] = useState<Temple[]>([]);
-  const [userScore] = useState(1200);
-  const [templesVisited] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [userScore] = useState(1200);
+  const [templesVisited] = useState(12);
+  const [totalTemples, setTotalTemples] = useState(0);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -42,18 +44,21 @@ const Bhakthi = () => {
 
   const fetchTemples = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('temples')
         .select('*')
-        .order('created_at', { ascending: false });
-
+        .order('name');
+      
       if (error) throw error;
       
       setTemples(data || []);
-    } catch (error: any) {
+      setTotalTemples(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching temples:', error);
       toast({
-        title: "Error loading temples",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load temples",
         variant: "destructive",
       });
     } finally {
@@ -99,7 +104,7 @@ const Bhakthi = () => {
           <Card className="bg-gradient-temple/10 border-accent/20">
             <CardContent className="p-6 text-center">
               <Target className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-3xl font-bold text-accent">{temples.length - templesVisited}</div>
+              <div className="text-3xl font-bold text-accent">{totalTemples - templesVisited}</div>
               <div className="text-sm text-muted-foreground">Yet to Visit</div>
             </CardContent>
           </Card>
@@ -135,44 +140,44 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
-                  Temples Across India ({temples.length} temples)
+                  Temples Across India ({totalTemples} temples)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="h-96 bg-muted/30 rounded-lg border flex items-center justify-center">
-                    <p className="text-muted-foreground">Loading temples...</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <Skeleton key={i} className="h-40 w-full" />
+                    ))}
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {temples.map((temple) => (
-                        <Card key={temple.id} className="hover:shadow-sacred transition-sacred">
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold text-foreground mb-2">{temple.name}</h3>
-                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                              {temple.description || 'Sacred temple'}
-                            </p>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                {temple.city}, {temple.state}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-accent text-accent" />
-                                {temple.rating}
-                              </span>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between">
-                              <Badge variant="secondary">+{temple.points} pts</Badge>
-                              <Button variant="sacred" size="sm">
-                                Visit
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {temples.map((temple) => (
+                      <div
+                        key={temple.id}
+                        className="p-4 rounded-lg border bg-card hover:shadow-lg transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-foreground">{temple.name}</h3>
+                          <Badge variant="secondary">{temple.points} pts</Badge>
+                        </div>
+                        {temple.description && (
+                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                            {temple.description}
+                          </p>
+                        )}
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {temple.city}, {temple.state}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-accent text-accent" />
+                            {temple.rating}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -184,26 +189,27 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-primary" />
-                  All Temples
+                  Nearby Temples
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <p className="text-center text-muted-foreground">Loading temples...</p>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
                 ) : (
                   <div className="space-y-4">
-                    {temples.map((temple) => (
+                    {temples.slice(0, 8).map((temple) => (
                       <div
                         key={temple.id}
-                        className="p-4 rounded-lg border transition-sacred hover:shadow-sacred bg-muted/30 border-border"
+                        className="p-4 rounded-lg border bg-card hover:shadow-lg transition-all"
                       >
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="font-semibold text-foreground">{temple.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {temple.description || 'Sacred temple'}
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 {temple.city}, {temple.state}
@@ -244,12 +250,12 @@ const Bhakthi = () => {
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span>Temples Visited</span>
-                      <span>{templesVisited} / {temples.length}</span>
+                      <span>{templesVisited} / {totalTemples}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-3">
                       <div 
                         className="bg-gradient-sacred h-3 rounded-full transition-all duration-500"
-                        style={{ width: temples.length > 0 ? `${(templesVisited / temples.length) * 100}%` : '0%' }}
+                        style={{ width: `${totalTemples > 0 ? (templesVisited / totalTemples) * 100 : 0}%` }}
                       />
                     </div>
                   </div>
