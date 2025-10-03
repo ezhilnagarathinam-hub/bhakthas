@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   MapPin, 
   Navigation, 
@@ -14,41 +16,50 @@ import {
   Compass
 } from "lucide-react";
 
+interface Temple {
+  id: string;
+  name: string;
+  description: string | null;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  rating: number;
+  points: number;
+}
+
 const Bhakthi = () => {
+  const [temples, setTemples] = useState<Temple[]>([]);
   const [userScore] = useState(1200);
-  const [templesVisited] = useState(12);
-  const [totalTemples] = useState(5000);
+  const [templesVisited] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  const nearbyTemples = [
-    {
-      name: "Tirupati Balaji Temple",
-      distance: "2.3 km",
-      points: 100,
-      visited: true,
-      rating: 4.9
-    },
-    {
-      name: "ISKCON Temple",
-      distance: "5.1 km", 
-      points: 100,
-      visited: false,
-      rating: 4.7
-    },
-    {
-      name: "Birla Mandir",
-      distance: "8.7 km",
-      points: 100,
-      visited: true,
-      rating: 4.6
-    },
-    {
-      name: "Jagannath Temple", 
-      distance: "12.4 km",
-      points: 100,
-      visited: false,
-      rating: 4.8
+  useEffect(() => {
+    fetchTemples();
+  }, []);
+
+  const fetchTemples = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('temples')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setTemples(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading temples",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,7 +99,7 @@ const Bhakthi = () => {
           <Card className="bg-gradient-temple/10 border-accent/20">
             <CardContent className="p-6 text-center">
               <Target className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-3xl font-bold text-accent">{totalTemples - templesVisited}</div>
+              <div className="text-3xl font-bold text-accent">{temples.length - templesVisited}</div>
               <div className="text-sm text-muted-foreground">Yet to Visit</div>
             </CardContent>
           </Card>
@@ -124,27 +135,46 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
-                  Temples Across India
+                  Temples Across India ({temples.length} temples)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-96 bg-muted/30 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <Map className="h-16 w-16 text-muted-foreground mx-auto" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        Interactive Temple Map
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        To enable the full map experience with all temples in India,<br />
-                        you'll need to connect your project to Supabase for backend functionality.
-                      </p>
-                      <Button variant="sacred">
-                        Connect Supabase
-                      </Button>
+                {loading ? (
+                  <div className="h-96 bg-muted/30 rounded-lg border flex items-center justify-center">
+                    <p className="text-muted-foreground">Loading temples...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {temples.map((temple) => (
+                        <Card key={temple.id} className="hover:shadow-sacred transition-sacred">
+                          <CardContent className="p-4">
+                            <h3 className="font-semibold text-foreground mb-2">{temple.name}</h3>
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                              {temple.description || 'Sacred temple'}
+                            </p>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                {temple.city}, {temple.state}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-accent text-accent" />
+                                {temple.rating}
+                              </span>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between">
+                              <Badge variant="secondary">+{temple.points} pts</Badge>
+                              <Button variant="sacred" size="sm">
+                                Visit
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -154,50 +184,52 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-primary" />
-                  Nearby Temples
+                  All Temples
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {nearbyTemples.map((temple, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-lg border transition-sacred hover:shadow-sacred ${
-                        temple.visited 
-                          ? "bg-primary/5 border-primary/20" 
-                          : "bg-muted/30 border-border"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{temple.name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {temple.distance}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-accent text-accent" />
-                              {temple.rating}
-                            </span>
+                {loading ? (
+                  <p className="text-center text-muted-foreground">Loading temples...</p>
+                ) : (
+                  <div className="space-y-4">
+                    {temples.map((temple) => (
+                      <div
+                        key={temple.id}
+                        className="p-4 rounded-lg border transition-sacred hover:shadow-sacred bg-muted/30 border-border"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-foreground">{temple.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {temple.description || 'Sacred temple'}
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {temple.city}, {temple.state}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-accent text-accent" />
+                                {temple.rating}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge variant="secondary">
+                              +{temple.points} pts
+                            </Badge>
+                            <Button 
+                              variant="sacred" 
+                              size="sm"
+                            >
+                              Visit
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge variant={temple.visited ? "default" : "secondary"}>
-                            {temple.visited ? "Visited" : `+${temple.points} pts`}
-                          </Badge>
-                          <Button 
-                            variant={temple.visited ? "outline" : "sacred"} 
-                            size="sm"
-                            disabled={temple.visited}
-                          >
-                            {temple.visited ? "Completed" : "Visit"}
-                          </Button>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -212,12 +244,12 @@ const Bhakthi = () => {
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span>Temples Visited</span>
-                      <span>{templesVisited} / {totalTemples}</span>
+                      <span>{templesVisited} / {temples.length}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-3">
                       <div 
                         className="bg-gradient-sacred h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${(templesVisited / totalTemples) * 100}%` }}
+                        style={{ width: temples.length > 0 ? `${(templesVisited / temples.length) * 100}%` : '0%' }}
                       />
                     </div>
                   </div>
