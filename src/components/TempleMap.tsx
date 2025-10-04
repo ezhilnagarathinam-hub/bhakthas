@@ -17,6 +17,7 @@ interface Temple {
 
 interface TempleMapProps {
   temples: Temple[];
+  onVisitTemple?: (templeId: string) => void;
 }
 
 // Fix for default marker icon issue in Leaflet
@@ -27,7 +28,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const TempleMap = ({ temples }: TempleMapProps) => {
+const TempleMap = ({ temples, onVisitTemple }: TempleMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -69,20 +70,37 @@ const TempleMap = ({ temples }: TempleMapProps) => {
   useEffect(() => {
     if (!map.current) return;
 
+    // Clear existing markers
+    map.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.current?.removeLayer(layer);
+      }
+    });
+
     // Add temple markers
     temples.forEach((temple) => {
       const marker = L.marker([temple.latitude, temple.longitude]).addTo(map.current!);
       
-      marker.bindPopup(`
-        <div class="p-2">
-          <h3 class="font-semibold text-base mb-1">${temple.name}</h3>
-          <p class="text-sm text-gray-600 mb-1">${temple.city}, ${temple.state}</p>
-          <div class="flex items-center gap-2">
-            <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">⭐ ${temple.rating}</span>
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">+${temple.points} pts</span>
-          </div>
+      const popupContent = document.createElement('div');
+      popupContent.className = 'p-2';
+      popupContent.innerHTML = `
+        <h3 class="font-semibold text-base mb-1">${temple.name}</h3>
+        <p class="text-sm text-gray-600 mb-1">${temple.city}, ${temple.state}</p>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">⭐ ${temple.rating}</span>
+          <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">+${temple.points} pts</span>
         </div>
-      `);
+      `;
+      
+      if (onVisitTemple) {
+        const button = document.createElement('button');
+        button.className = 'w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-1.5 px-3 rounded transition-colors';
+        button.textContent = 'Visit Temple';
+        button.onclick = () => onVisitTemple(temple.id);
+        popupContent.appendChild(button);
+      }
+      
+      marker.bindPopup(popupContent);
     });
 
     // Add user location marker if available
@@ -98,7 +116,7 @@ const TempleMap = ({ temples }: TempleMapProps) => {
         .addTo(map.current)
         .bindPopup('<div class="p-2"><strong>Your Location</strong></div>');
     }
-  }, [temples, userLocation]);
+  }, [temples, userLocation, onVisitTemple]);
 
   return (
     <div 

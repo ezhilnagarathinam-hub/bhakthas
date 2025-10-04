@@ -34,14 +34,67 @@ interface Temple {
 const Bhakthi = () => {
   const [temples, setTemples] = useState<Temple[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userScore] = useState(1200);
+  const [userScore, setUserScore] = useState(1200);
   const [templesVisited] = useState(12);
   const [totalTemples, setTotalTemples] = useState(0);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyTemples, setNearbyTemples] = useState<(Temple & { distance: number })[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
     fetchTemples();
+    getUserLocation();
   }, []);
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          toast({
+            title: "Location Access",
+            description: "Please enable location access to see nearby temples",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in kilometers
+  };
+
+  useEffect(() => {
+    if (userLocation && temples.length > 0) {
+      const templesWithDistance = temples.map(temple => ({
+        ...temple,
+        distance: calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          temple.latitude,
+          temple.longitude
+        )
+      }));
+      
+      // Sort by distance
+      templesWithDistance.sort((a, b) => a.distance - b.distance);
+      setNearbyTemples(templesWithDistance);
+    }
+  }, [userLocation, temples]);
 
   const fetchTemples = async () => {
     try {
@@ -65,6 +118,14 @@ const Bhakthi = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVisitTemple = async (templeId: string) => {
+    toast({
+      title: "Visit Recorded!",
+      description: "Your temple visit has been recorded. Points will be awarded after verification.",
+    });
+    setUserScore(prev => prev + 100);
   };
 
   return (
@@ -148,7 +209,7 @@ const Bhakthi = () => {
                 {loading ? (
                   <Skeleton className="h-[500px] w-full rounded-lg" />
                 ) : (
-                  <TempleMap temples={temples} />
+                  <TempleMap temples={temples} onVisitTemple={handleVisitTemple} />
                 )}
               </CardContent>
             </Card>
@@ -159,11 +220,19 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-primary" />
-                  Nearby Temples
+                  Nearby Temples {userLocation && `(${nearbyTemples.length} found)`}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {!userLocation ? (
+                  <div className="text-center py-8">
+                    <Navigation className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">Enable location access to find nearby temples</p>
+                    <Button onClick={getUserLocation} variant="sacred">
+                      Enable Location
+                    </Button>
+                  </div>
+                ) : loading ? (
                   <div className="space-y-4">
                     {[1, 2, 3, 4].map((i) => (
                       <Skeleton key={i} className="h-20 w-full" />
@@ -171,13 +240,13 @@ const Bhakthi = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {temples.slice(0, 8).map((temple) => (
+                    {nearbyTemples.map((temple) => (
                       <div
                         key={temple.id}
                         className="p-4 rounded-lg border bg-card hover:shadow-lg transition-all"
                       >
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold text-foreground">{temple.name}</h3>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                               <span className="flex items-center gap-1">
@@ -188,6 +257,10 @@ const Bhakthi = () => {
                                 <Star className="h-3 w-3 fill-accent text-accent" />
                                 {temple.rating}
                               </span>
+                              <span className="flex items-center gap-1 text-primary font-medium">
+                                <Navigation className="h-3 w-3" />
+                                {temple.distance.toFixed(1)} km away
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -197,6 +270,7 @@ const Bhakthi = () => {
                             <Button 
                               variant="sacred" 
                               size="sm"
+                              onClick={() => handleVisitTemple(temple.id)}
                             >
                               Visit
                             </Button>
