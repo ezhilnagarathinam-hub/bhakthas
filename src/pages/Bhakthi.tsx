@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import TempleMap from "@/components/TempleMap";
 import { 
   MapPin, 
   Navigation, 
@@ -140,45 +141,14 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
-                  Temples Across India ({totalTemples} temples)
+                  Live Temple Map ({totalTemples} temples)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <Skeleton key={i} className="h-40 w-full" />
-                    ))}
-                  </div>
+                  <Skeleton className="h-[500px] w-full rounded-lg" />
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {temples.map((temple) => (
-                      <div
-                        key={temple.id}
-                        className="p-4 rounded-lg border bg-card hover:shadow-lg transition-all"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-foreground">{temple.name}</h3>
-                          <Badge variant="secondary">{temple.points} pts</Badge>
-                        </div>
-                        {temple.description && (
-                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                            {temple.description}
-                          </p>
-                        )}
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {temple.city}, {temple.state}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-accent text-accent" />
-                            {temple.rating}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <TempleMap temples={temples} />
                 )}
               </CardContent>
             </Card>
