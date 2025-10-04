@@ -2,17 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Users, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-temple.jpg";
-
 const Hero = () => {
-  return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+  return <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={heroImage}
-          alt="Sacred Temple"
-          className="w-full h-full object-cover"
-        />
+        <img src={heroImage} alt="Sacred Temple" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/30" />
       </div>
 
@@ -27,7 +21,7 @@ const Hero = () => {
                   Bhakthas
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
+              <p className="text-xl max-w-2xl leading-relaxed text-[#727272] text-left font-normal md:text-2xl">
                 Your spiritual journey begins here. Discover sacred products, test your devotion, 
                 and explore temples across India with our divine platform.
               </p>
@@ -100,8 +94,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
