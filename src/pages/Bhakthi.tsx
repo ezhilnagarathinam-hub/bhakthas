@@ -220,7 +220,7 @@ const Bhakthi = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Navigation className="h-5 w-5 text-primary" />
-                  Nearby Temples {userLocation && `(${nearbyTemples.length} found)`}
+                  Nearby Temples {userLocation && nearbyTemples.length > 0 && `(${nearbyTemples.filter(t => t.distance <= 50).length} within 50km)`}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -233,52 +233,15 @@ const Bhakthi = () => {
                     </Button>
                   </div>
                 ) : loading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <Skeleton key={i} className="h-20 w-full" />
-                    ))}
-                  </div>
+                  <Skeleton className="h-[500px] w-full rounded-lg" />
                 ) : (
-                  <div className="space-y-4">
-                    {nearbyTemples.map((temple) => (
-                      <div
-                        key={temple.id}
-                        className="p-4 rounded-lg border bg-card hover:shadow-lg transition-all"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-foreground">{temple.name}</h3>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {temple.city}, {temple.state}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-accent text-accent" />
-                                {temple.rating}
-                              </span>
-                              <span className="flex items-center gap-1 text-primary font-medium">
-                                <Navigation className="h-3 w-3" />
-                                {temple.distance.toFixed(1)} km away
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="secondary">
-                              +{temple.points} pts
-                            </Badge>
-                            <Button 
-                              variant="sacred" 
-                              size="sm"
-                              onClick={() => handleVisitTemple(temple.id)}
-                            >
-                              Visit
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <TempleMap 
+                    temples={temples} 
+                    onVisitTemple={handleVisitTemple}
+                    centerOnUser={true}
+                    userLocation={[userLocation.lat, userLocation.lng]}
+                    maxDistance={50}
+                  />
                 )}
               </CardContent>
             </Card>
