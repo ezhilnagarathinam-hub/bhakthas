@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MapPin, ShoppingBag, Home } from "lucide-react";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen } from "lucide-react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +11,7 @@ const Navigation = () => {
     { name: "Home", path: "/", icon: Home },
     { name: "Pooja Products", path: "/products", icon: ShoppingBag },
     { name: "Test My Bhakthi", path: "/bhakthi", icon: MapPin },
+    { name: "Knowledge Hub", path: "/knowledge-hub", icon: BookOpen },
     { name: "Mantra Chanting", path: "/mantra", icon: () => <span className="text-lg">🕉️</span> },
   ];
 

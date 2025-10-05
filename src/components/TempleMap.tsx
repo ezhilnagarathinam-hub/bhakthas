@@ -144,11 +144,22 @@ const TempleMap = ({ temples, onVisitTemple, centerOnUser = false, userLocation:
       `;
       
       if (onVisitTemple) {
-        const button = document.createElement('button');
-        button.className = 'w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-1.5 px-3 rounded transition-colors';
-        button.textContent = 'Visit Temple';
-        button.onclick = () => onVisitTemple(temple.id);
-        popupContent.appendChild(button);
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'flex gap-2';
+        
+        const recordButton = document.createElement('button');
+        recordButton.className = 'flex-1 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-1.5 px-3 rounded transition-colors';
+        recordButton.textContent = 'Record Visit';
+        recordButton.onclick = () => onVisitTemple(temple.id);
+        
+        const knowMoreButton = document.createElement('a');
+        knowMoreButton.className = 'flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-3 rounded transition-colors text-center';
+        knowMoreButton.textContent = 'Know More';
+        knowMoreButton.href = `/knowledge-hub/${temple.id}`;
+        
+        buttonContainer.appendChild(recordButton);
+        buttonContainer.appendChild(knowMoreButton);
+        popupContent.appendChild(buttonContainer);
       }
       
       marker.bindPopup(popupContent);

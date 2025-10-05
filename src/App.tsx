@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import ProductsLayout from "./pages/ProductsLayout";
 import BhakthiLayout from "./pages/BhakthiLayout";
 import MantraLayout from "./pages/MantraLayout";
+import KnowledgeHubLayout from "./pages/KnowledgeHubLayout";
+import TempleDetailLayout from "./pages/TempleDetailLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/products" element={<ProductsLayout />} />
           <Route path="/bhakthi" element={<BhakthiLayout />} />
           <Route path="/mantra" element={<MantraLayout />} />
+          <Route path="/knowledge-hub" element={<KnowledgeHubLayout />} />
+          <Route path="/knowledge-hub/:templeId" element={<TempleDetailLayout />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
