@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Users, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-temple.jpg";
+import FeaturedTempleInfo from "./FeaturedTempleInfo";
 const Hero = () => {
   return <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
@@ -38,6 +39,12 @@ const Hero = () => {
                 <Button variant="outline" size="lg" className="group">
                   Test My Bhakthi
                   <MapPin className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                </Button>
+              </Link>
+              <Link to="/knowledge-hub">
+                <Button variant="mystic" size="lg" className="group">
+                  Knowledge Hub
+                  <Star className="ml-2 h-5 w-5 group-hover:rotate-180 transition-transform" />
                 </Button>
               </Link>
             </div>
@@ -92,6 +99,11 @@ const Hero = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Featured Temple Info */}
+        <div className="mt-12 max-w-3xl mx-auto">
+          <FeaturedTempleInfo />
         </div>
       </div>
     </section>;

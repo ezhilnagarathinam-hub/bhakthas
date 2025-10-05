@@ -8,49 +8,51 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 35 20% 98%;
-    --foreground: 20 20% 15%;
+    --background: 280 20% 99%;
+    --foreground: 280 10% 10%;
 
-    --card: 30 25% 97%;
-    --card-foreground: 20 20% 15%;
+    --card: 280 30% 98%;
+    --card-foreground: 280 10% 10%;
 
-    --popover: 30 25% 97%;
-    --popover-foreground: 20 20% 15%;
+    --popover: 280 30% 98%;
+    --popover-foreground: 280 10% 10%;
 
-    --primary: 25 85% 55%;
-    --primary-foreground: 30 15% 95%;
+    --primary: 280 70% 50%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 15 60% 50%;
-    --secondary-foreground: 30 15% 95%;
+    --secondary: 320 80% 55%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 35 15% 92%;
-    --muted-foreground: 25 15% 45%;
+    --muted: 280 10% 95%;
+    --muted-foreground: 280 5% 45%;
 
-    --accent: 45 95% 65%;
-    --accent-foreground: 25 20% 15%;
+    --accent: 39 100% 50%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 75% 55%;
-    --destructive-foreground: 30 15% 95%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 35 25% 88%;
-    --input: 35 25% 88%;
-    --ring: 25 85% 55%;
+    --border: 280 15% 90%;
+    --input: 280 15% 90%;
+    --ring: 280 70% 50%;
 
     --radius: 0.75rem;
 
-    /* Sacred gradients */
-    --gradient-sacred: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-    --gradient-divine: linear-gradient(180deg, hsl(var(--accent)), hsl(var(--primary)));
-    --gradient-temple: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
+    /* Divine Gradients - Vibrant & Spiritual */
+    --gradient-sacred: linear-gradient(135deg, hsl(280, 70%, 50%), hsl(320, 80%, 55%), hsl(39, 100%, 50%));
+    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(24, 95%, 53%));
+    --gradient-temple: linear-gradient(135deg, hsl(280, 70%, 50%) 0%, hsl(320, 80%, 55%) 50%, hsl(39, 100%, 50%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(260, 80%, 60%), hsl(300, 70%, 60%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(39, 100%, 95%), hsl(280, 70%, 98%));
     
-    /* Sacred shadows */
-    --shadow-sacred: 0 10px 40px -10px hsl(var(--primary) / 0.3);
-    --shadow-divine: 0 20px 60px -15px hsl(var(--secondary) / 0.4);
-    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.5);
+    /* Divine Shadows - More Prominent */
+    --shadow-sacred: 0 20px 60px -15px hsl(280 70% 50% / 0.4);
+    --shadow-divine: 0 0 80px hsl(320 80% 55% / 0.3);
+    --shadow-glow: 0 0 100px hsl(39 100% 50% / 0.5);
     
     /* Animations */
     --transition-sacred: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-divine: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-divine: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -70,33 +72,40 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 280 30% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 280 25% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 280 25% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 280 70% 60%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 320 80% 65%;
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 280 20% 15%;
+    --muted-foreground: 280 10% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 39 100% 60%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 280 20% 18%;
+    --input: 280 20% 18%;
+    --ring: 280 70% 60%;
+
+    /* Dark mode gradients - More vibrant */
+    --gradient-sacred: linear-gradient(135deg, hsl(280, 70%, 60%), hsl(320, 80%, 65%), hsl(39, 100%, 60%));
+    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 60%), hsl(24, 95%, 63%));
+    --gradient-temple: linear-gradient(135deg, hsl(280, 70%, 60%) 0%, hsl(320, 80%, 65%) 50%, hsl(39, 100%, 60%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(260, 80%, 70%), hsl(300, 70%, 70%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(0, 0%, 10%), hsl(280, 70%, 20%));
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

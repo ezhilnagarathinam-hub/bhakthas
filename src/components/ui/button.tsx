@@ -11,13 +11,14 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sacred transition-sacred",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-primary/20 bg-background/80 backdrop-blur-sm hover:bg-primary/10 hover:text-primary transition-sacred",
+        outline: "border-2 border-primary/30 bg-background/80 backdrop-blur-sm hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-sacred",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sacred transition-sacred",
         ghost: "hover:bg-accent/20 hover:text-accent-foreground transition-sacred",
         link: "text-primary underline-offset-4 hover:underline transition-sacred",
-        sacred: "bg-gradient-sacred text-primary-foreground hover:shadow-divine transition-divine shadow-sacred",
-        divine: "bg-gradient-divine text-primary-foreground hover:shadow-glow transition-divine shadow-divine",
-        temple: "bg-gradient-temple text-primary-foreground hover:scale-105 transition-divine shadow-sacred",
+        sacred: "bg-gradient-sacred text-white hover:shadow-divine hover:scale-105 transition-divine shadow-sacred font-semibold",
+        divine: "bg-gradient-divine text-white hover:shadow-glow hover:scale-105 transition-divine shadow-divine font-semibold",
+        temple: "bg-gradient-temple text-white hover:scale-105 transition-divine shadow-sacred font-semibold",
+        mystic: "bg-gradient-mystic text-white hover:shadow-glow hover:scale-105 transition-divine shadow-divine font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",

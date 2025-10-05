@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import TempleMap from "@/components/TempleMap";
-import { MapPin, BookOpen } from "lucide-react";
+import { MapPin, BookOpen, Star, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Temple {
@@ -74,18 +74,75 @@ const KnowledgeHub = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
+        <Card className="bg-card/80 backdrop-blur-sm border-primary/20 shadow-divine">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              Temple Directory ({temples.length} temples)
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <BookOpen className="h-6 w-6 text-primary" />
+              Temple Directory
             </CardTitle>
+            <CardDescription>
+              Discover {temples.length} sacred temples across India
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-[500px] w-full rounded-lg" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-[200px] w-full rounded-lg" />
+                ))}
+              </div>
             ) : (
-              <TempleMap temples={temples} onVisitTemple={handleTempleClick} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {temples.map((temple) => (
+                  <Card 
+                    key={temple.id} 
+                    className="group hover:shadow-divine transition-all duration-300 cursor-pointer border-primary/10 hover:border-primary/30 bg-gradient-enlighten"
+                    onClick={() => handleTempleClick(temple.id)}
+                  >
+                    <CardContent className="p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">
+                            {temple.name}
+                          </h3>
+                          {temple.city && temple.state && (
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {temple.city}, {temple.state}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-gradient-sacred rounded-full flex items-center justify-center shadow-sacred">
+                            <span className="text-white text-lg">🕉️</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {temple.description && (
+                        <p className="text-sm text-foreground/70 line-clamp-2">
+                          {temple.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-accent fill-accent" />
+                          <span className="text-sm font-medium">{temple.rating}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="group-hover:text-primary group-hover:translate-x-1 transition-all"
+                        >
+                          Explore
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

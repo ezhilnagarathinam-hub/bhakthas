@@ -68,6 +68,7 @@ export type Database = {
           longitude: number
           name: string
           points: number | null
+          quick_info: string | null
           rating: number | null
           state: string | null
           updated_at: string
@@ -84,6 +85,7 @@ export type Database = {
           longitude: number
           name: string
           points?: number | null
+          quick_info?: string | null
           rating?: number | null
           state?: string | null
           updated_at?: string
@@ -100,6 +102,7 @@ export type Database = {
           longitude?: number
           name?: string
           points?: number | null
+          quick_info?: string | null
           rating?: number | null
           state?: string | null
           updated_at?: string

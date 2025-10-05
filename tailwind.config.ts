@@ -62,6 +62,8 @@ export default {
         "gradient-sacred": "var(--gradient-sacred)",
         "gradient-divine": "var(--gradient-divine)",
         "gradient-temple": "var(--gradient-temple)",
+        "gradient-mystic": "var(--gradient-mystic)",
+        "gradient-enlighten": "var(--gradient-enlighten)",
       },
       boxShadow: {
         "sacred": "var(--shadow-sacred)",

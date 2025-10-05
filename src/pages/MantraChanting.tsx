@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, RotateCcw, Mic, MicOff } from "lucide-react";
+import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import divineOm from "@/assets/divine-om.jpg";
 
 interface Achievement {
   id: string;
@@ -188,7 +189,24 @@ const MantraChanting = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10 p-4">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Divine Background */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={divineOm} 
+          alt="Divine Om" 
+          className="w-full h-full object-cover opacity-20" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-primary/10 to-secondary/20" />
+      </div>
+
+      {/* Floating Divine Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-sacred opacity-20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-40 right-20 w-40 h-40 bg-gradient-mystic opacity-20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-temple opacity-10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Confetti Animation */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
@@ -208,21 +226,31 @@ const MantraChanting = () => {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="relative z-10 max-w-2xl mx-auto space-y-8 p-4">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
-            🕉️ Mantra Chanting
+        <div className="text-center space-y-4 pt-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-sacred rounded-full shadow-divine mb-4 animate-pulse">
+            <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
+            Mantra Chanting
           </h1>
-          <p className="text-muted-foreground">
-            Chant your mantras with AI-powered counting
+          <p className="text-lg text-muted-foreground">
+            Chant your sacred mantras with AI-powered counting
           </p>
+          <div className="flex items-center justify-center gap-3 text-sm text-primary/70">
+            <span>✨</span>
+            <span>Connect with the Divine</span>
+            <span>✨</span>
+          </div>
         </div>
 
         {/* Target Selection */}
-        <Card className="shadow-sacred">
+        <Card className="shadow-divine border-primary/20 bg-card/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-center">Set Your Target</CardTitle>
+            <CardTitle className="text-center text-2xl bg-gradient-sacred bg-clip-text text-transparent">
+              🪷 Set Your Sacred Target
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-center gap-2 flex-wrap">
@@ -255,63 +283,70 @@ const MantraChanting = () => {
         </Card>
 
         {/* Counter Display */}
-        <Card className={`shadow-divine transition-all duration-500 ${
-          isCompleted ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-300' : ''
+        <Card className={`shadow-divine border-primary/20 bg-card/80 backdrop-blur-sm transition-all duration-500 ${
+          isCompleted ? 'bg-gradient-sacred border-accent shadow-glow' : ''
         }`}>
-          <CardContent className="p-8">
+          <CardContent className="p-12">
             <div className="text-center space-y-6">
               <div className="relative">
-                <div className={`text-8xl font-bold transition-all duration-500 ${
-                  isCompleted ? 'text-green-600' : 'bg-gradient-sacred bg-clip-text text-transparent'
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-64 h-64 bg-gradient-sacred opacity-10 rounded-full blur-3xl animate-pulse" />
+                </div>
+                <div className={`relative text-9xl font-bold transition-all duration-500 ${
+                  isCompleted ? 'text-white drop-shadow-glow' : 'bg-gradient-sacred bg-clip-text text-transparent'
                 }`}>
                   {count}
                 </div>
-                <div className="text-2xl text-muted-foreground mt-2">
+                <div className={`text-3xl font-semibold mt-4 ${
+                  isCompleted ? 'text-white/90' : 'text-muted-foreground'
+                }`}>
                   / {target}
                 </div>
                 {isCompleted && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge variant="secondary" className="text-lg px-4 py-2 bg-green-100 text-green-800">
-                      🎉 COMPLETED! 🎉
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                    <Badge className="text-xl px-6 py-3 bg-white text-primary shadow-glow animate-pulse font-bold">
+                      🎉 Jai Shri Ram! Completed! 🎉
                     </Badge>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-4 flex-wrap">
                 <Button
                   onClick={toggleListening}
-                  variant={isListening ? "destructive" : "default"}
+                  variant={isListening ? "destructive" : "sacred"}
                   size="lg"
                   disabled={isCompleted}
-                  className="min-w-[120px]"
+                  className="min-w-[140px]"
                 >
                   {isListening ? (
                     <>
                       <MicOff className="h-5 w-5 mr-2" />
-                      Stop
+                      Stop Chant
                     </>
                   ) : (
                     <>
                       <Mic className="h-5 w-5 mr-2" />
-                      Start
+                      Start Chant
                     </>
                   )}
                 </Button>
 
                 <Button
                   onClick={manualIncrement}
-                  variant="outline"
+                  variant="divine"
                   size="lg"
                   disabled={isCompleted || count >= target}
+                  className="min-w-[140px]"
                 >
-                  +1 Manual
+                  +1 Count
                 </Button>
 
                 <Button
                   onClick={resetCounter}
                   variant="outline"
                   size="lg"
+                  className="min-w-[140px]"
                 >
                   <RotateCcw className="h-5 w-5 mr-2" />
                   Reset
@@ -330,12 +365,12 @@ const MantraChanting = () => {
 
         {/* Achievements Panel - Enhanced with Date/Time */}
         {achievements.length > 0 && (
-          <Card className="shadow-sacred">
+          <Card className="shadow-divine border-primary/20 bg-card/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-center flex items-center justify-center gap-2">
-                🏆 Recent Achievements
-                <Badge variant="secondary" className="ml-2">
-                  {achievements.length} total
+              <CardTitle className="text-center flex items-center justify-center gap-2 text-2xl bg-gradient-sacred bg-clip-text text-transparent">
+                🏆 Sacred Achievements
+                <Badge className="ml-2 bg-gradient-mystic text-white">
+                  {achievements.length}
                 </Badge>
               </CardTitle>
             </CardHeader>

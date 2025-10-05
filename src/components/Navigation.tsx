@@ -16,13 +16,13 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+    <nav className="bg-background/90 backdrop-blur-md border-b-2 border-primary/20 sticky top-0 z-50 shadow-sacred">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-sacred rounded-lg flex items-center justify-center shadow-sacred">
-                <span className="text-primary-foreground font-bold text-lg">भ</span>
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-gradient-sacred rounded-xl flex items-center justify-center shadow-divine group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xl">भ</span>
               </div>
               <span className="text-2xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
                 Bhakthas
@@ -40,10 +40,10 @@ const Navigation = () => {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-sacred ${
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-sacred ${
                       isActive
-                        ? "text-primary bg-primary/10"
-                        : "text-foreground hover:text-primary hover:bg-primary/5"
+                        ? "text-white bg-gradient-sacred shadow-sacred"
+                        : "text-foreground hover:text-primary hover:bg-primary/10"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -55,8 +55,8 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:block">
-            <Button variant="sacred" size="sm">
-              Sign In
+            <Button variant="sacred" size="sm" className="shadow-sacred">
+              ✨ Sign In
             </Button>
           </div>
 
@@ -75,8 +75,8 @@ const Navigation = () => {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden bg-background/95 backdrop-blur-md border-t border-border">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="md:hidden bg-background/95 backdrop-blur-md border-t-2 border-primary/20">
+          <div className="px-2 pt-2 pb-3 space-y-2 sm:px-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -84,10 +84,10 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-sacred ${
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-base font-semibold transition-sacred ${
                     isActive
-                      ? "text-primary bg-primary/10"
-                      : "text-foreground hover:text-primary hover:bg-primary/5"
+                      ? "text-white bg-gradient-sacred shadow-sacred"
+                      : "text-foreground hover:text-primary hover:bg-primary/10"
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
