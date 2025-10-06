@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import divineOm from "@/assets/divine-om.jpg";
 
@@ -30,8 +33,25 @@ const MantraChanting = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [mantras, setMantras] = useState<any[]>([]);
+  const [selectedMantra, setSelectedMantra] = useState<any>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchMantras();
+  }, []);
+
+  const fetchMantras = async () => {
+    const { data, error } = await supabase
+      .from('mantras')
+      .select('*')
+      .order('title');
+
+    if (!error && data) {
+      setMantras(data);
+    }
+  };
 
   const presetTargets = [9, 108, 1008];
 
@@ -226,9 +246,98 @@ const MantraChanting = () => {
         </div>
       )}
 
-      <div className="relative z-10 max-w-2xl mx-auto space-y-8 p-4">
-        {/* Header */}
-        <div className="text-center space-y-4 pt-8">
+      <div className="relative z-10 max-w-6xl mx-auto space-y-8 p-4 flex gap-4">
+        {/* Mantra Sidebar */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              variant="sacred" 
+              size="lg" 
+              className="fixed left-4 top-24 z-50 shadow-divine"
+            >
+              <BookOpen className="w-5 h-5 mr-2" />
+              Mantras
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-96">
+            <SheetHeader>
+              <SheetTitle className="text-2xl bg-gradient-sacred bg-clip-text text-transparent">
+                🕉️ Sacred Mantras
+              </SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-100px)] mt-6">
+              <div className="space-y-3">
+                {mantras.map((mantra) => (
+                  <Card
+                    key={mantra.id}
+                    className="cursor-pointer hover:shadow-divine transition-divine"
+                    onClick={() => setSelectedMantra(mantra)}
+                  >
+                    <CardContent className="p-4">
+                      <h3 className="font-bold text-lg mb-1">{mantra.title}</h3>
+                      {mantra.deity && (
+                        <Badge variant="secondary" className="mb-2">
+                          {mantra.deity}
+                        </Badge>
+                      )}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {mantra.translation || mantra.sanskrit_text}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex-1 space-y-8">
+          {/* Selected Mantra Display */}
+          {selectedMantra && (
+            <Card className="shadow-divine border-primary/20 bg-card/80 backdrop-blur-sm mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl bg-gradient-sacred bg-clip-text text-transparent flex items-center justify-between">
+                  <span>{selectedMantra.title}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setSelectedMantra(null)}
+                  >
+                    ✕
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Sanskrit:</h4>
+                  <p className="text-xl font-sanskrit leading-relaxed">
+                    {selectedMantra.sanskrit_text}
+                  </p>
+                </div>
+                {selectedMantra.transliteration && (
+                  <div>
+                    <h4 className="font-semibold text-primary mb-2">Transliteration:</h4>
+                    <p className="text-lg">{selectedMantra.transliteration}</p>
+                  </div>
+                )}
+                {selectedMantra.translation && (
+                  <div>
+                    <h4 className="font-semibold text-primary mb-2">Translation:</h4>
+                    <p className="text-muted-foreground">{selectedMantra.translation}</p>
+                  </div>
+                )}
+                {selectedMantra.benefits && (
+                  <div>
+                    <h4 className="font-semibold text-primary mb-2">Benefits:</h4>
+                    <p className="text-muted-foreground">{selectedMantra.benefits}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Header */}
+          <div className="text-center space-y-4 pt-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-sacred rounded-full shadow-divine mb-4 animate-pulse">
             <Sparkles className="w-10 h-10 text-white" />
           </div>
@@ -419,6 +528,7 @@ const MantraChanting = () => {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
 
       <style>{`
