@@ -10,6 +10,7 @@ import MantraLayout from "./pages/MantraLayout";
 import KnowledgeHubLayout from "./pages/KnowledgeHubLayout";
 import TempleDetailLayout from "./pages/TempleDetailLayout";
 import AdminLayout from "./pages/AdminLayout";
+import AuthLayout from "./pages/AuthLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/knowledge-hub" element={<KnowledgeHubLayout />} />
           <Route path="/knowledge-hub/:templeId" element={<TempleDetailLayout />} />
           <Route path="/admin" element={<AdminLayout />} />
+          <Route path="/auth" element={<AuthLayout />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

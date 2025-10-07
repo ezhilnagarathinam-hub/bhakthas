@@ -1,11 +1,37 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MapPin, ShoppingBag, Home, BookOpen } from "lucide-react";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out successfully",
+      description: "Come back soon for your spiritual journey!",
+    });
+    navigate('/');
+  };
 
   const navItems = [
     { name: "Home", path: "/", icon: Home },
@@ -54,10 +80,25 @@ const Navigation = () => {
             </div>
           </div>
 
-          <div className="hidden md:block">
-            <Button variant="sacred" size="sm" className="shadow-sacred">
-              ✨ Sign In
-            </Button>
+          <div className="hidden md:flex items-center gap-2">
+            {user ? (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button variant="sacred" size="sm" onClick={handleSignOut} className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button variant="sacred" size="sm" asChild className="shadow-sacred">
+                <Link to="/auth">✨ Sign In</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -96,10 +137,30 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            <div className="pt-2">
-              <Button variant="sacred" size="sm" className="w-full">
-                Sign In
-              </Button>
+            <div className="pt-2 space-y-2">
+              {user ? (
+                <>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <Link to="/admin" onClick={() => setIsOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <Button variant="sacred" size="sm" className="w-full" onClick={() => {
+                    handleSignOut();
+                    setIsOpen(false);
+                  }}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button variant="sacred" size="sm" className="w-full" asChild>
+                  <Link to="/auth" onClick={() => setIsOpen(false)}>
+                    ✨ Sign In
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
