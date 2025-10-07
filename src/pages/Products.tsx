@@ -3,9 +3,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useCart } from "@/contexts/CartContext";
 import poojaImage from "@/assets/pooja-products.jpg";
 
 const Products = () => {
+  const { addToCart } = useCart();
+  
   const products = [
     {
       id: 1,
@@ -173,7 +176,16 @@ const Products = () => {
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0">
-                <Button variant="sacred" className="w-full group">
+                <Button 
+                  variant="sacred" 
+                  className="w-full group"
+                  onClick={() => addToCart({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                  })}
+                >
                   <ShoppingCart className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                   Add to Cart
                 </Button>

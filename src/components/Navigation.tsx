@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +13,7 @@ const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { totalItems } = useCart();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -81,6 +84,17 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild className="relative">
+              <Link to="/cart" className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                Cart
+                {totalItems > 0 && (
+                  <Badge className="ml-1 bg-accent text-accent-foreground">
+                    {totalItems}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
             {user ? (
               <>
                 <Button variant="outline" size="sm" asChild>
@@ -138,6 +152,17 @@ const Navigation = () => {
               );
             })}
             <div className="pt-2 space-y-2">
+              <Button variant="outline" size="sm" className="w-full relative" asChild>
+                <Link to="/cart" onClick={() => setIsOpen(false)}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Cart
+                  {totalItems > 0 && (
+                    <Badge className="ml-2 bg-accent text-accent-foreground">
+                      {totalItems}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
               {user ? (
                 <>
                   <Button variant="outline" size="sm" className="w-full" asChild>
