@@ -8,6 +8,10 @@ import Index from "./pages/Index";
 import ProductsLayout from "./pages/ProductsLayout";
 import CartLayout from "./pages/CartLayout";
 import CheckoutLayout from "./pages/CheckoutLayout";
+import DarshanServicesLayout from "./pages/DarshanServicesLayout";
+import DarshanBookingLayout from "./pages/DarshanBookingLayout";
+import DarshanPaymentLayout from "./pages/DarshanPaymentLayout";
+import DarshanTicketLayout from "./pages/DarshanTicketLayout";
 import BhakthiLayout from "./pages/BhakthiLayout";
 import MantraLayout from "./pages/MantraLayout";
 import KnowledgeHubLayout from "./pages/KnowledgeHubLayout";
@@ -30,6 +34,10 @@ const App = () => (
             <Route path="/products" element={<ProductsLayout />} />
             <Route path="/cart" element={<CartLayout />} />
             <Route path="/checkout" element={<CheckoutLayout />} />
+            <Route path="/darshan" element={<DarshanServicesLayout />} />
+            <Route path="/darshan/book/:templeId" element={<DarshanBookingLayout />} />
+            <Route path="/darshan/payment/:bookingId" element={<DarshanPaymentLayout />} />
+            <Route path="/darshan/ticket/:bookingId" element={<DarshanTicketLayout />} />
             <Route path="/bhakthi" element={<BhakthiLayout />} />
             <Route path="/mantra" element={<MantraLayout />} />
             <Route path="/knowledge-hub" element={<KnowledgeHubLayout />} />

@@ -11,6 +11,7 @@ import MantraManagement from "@/components/admin/MantraManagement";
 import OrderManagement from "@/components/admin/OrderManagement";
 import UserManagement from "@/components/admin/UserManagement";
 import UsageReports from "@/components/admin/UsageReports";
+import DarshanBookingManagement from "@/components/admin/DarshanBookingManagement";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -87,7 +88,7 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid grid-cols-3 lg:grid-cols-6 gap-2">
+          <TabsList className="grid grid-cols-3 lg:grid-cols-7 gap-2">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">Products</span>
@@ -103,6 +104,10 @@ const Admin = () => {
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <ShoppingBag className="w-4 h-4" />
               <span className="hidden sm:inline">Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="darshan" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              <span className="hidden sm:inline">Darshan</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
@@ -128,6 +133,10 @@ const Admin = () => {
 
           <TabsContent value="orders">
             <OrderManagement />
+          </TabsContent>
+
+          <TabsContent value="darshan">
+            <DarshanBookingManagement />
           </TabsContent>
 
           <TabsContent value="users">
