@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      darshan_bookings: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          darshan_date: string
+          darshan_time: string
+          darshan_type: Database["public"]["Enums"]["darshan_type"]
+          id: string
+          invoice_number: string
+          status: Database["public"]["Enums"]["booking_status"]
+          temple_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          darshan_date: string
+          darshan_time: string
+          darshan_type: Database["public"]["Enums"]["darshan_type"]
+          id?: string
+          invoice_number: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          temple_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          darshan_date?: string
+          darshan_time?: string
+          darshan_type?: Database["public"]["Enums"]["darshan_type"]
+          id?: string
+          invoice_number?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          temple_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "darshan_bookings_temple_id_fkey"
+            columns: ["temple_id"]
+            isOneToOne: false
+            referencedRelation: "temples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mantras: {
         Row: {
           audio_url: string | null
@@ -254,6 +313,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -264,6 +327,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      booking_status: "awaiting" | "confirmed" | "cancelled" | "refunded"
+      darshan_type: "standard_100" | "standard_500" | "vip_1000" | "free"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -392,6 +457,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      booking_status: ["awaiting", "confirmed", "cancelled", "refunded"],
+      darshan_type: ["standard_100", "standard_500", "vip_1000", "free"],
     },
   },
 } as const
