@@ -99,7 +99,7 @@ const Navigation = () => {
             {user ? (
               <>
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/admin" className="flex items-center gap-2">
+                  <Link to="/dashboard" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Dashboard
                   </Link>
@@ -167,7 +167,7 @@ const Navigation = () => {
               {user ? (
                 <>
                   <Button variant="outline" size="sm" className="w-full" asChild>
-                    <Link to="/admin" onClick={() => setIsOpen(false)}>
+                    <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                       <User className="h-4 w-4 mr-2" />
                       Dashboard
                     </Link>

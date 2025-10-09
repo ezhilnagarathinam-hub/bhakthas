@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 import poojaImage from "@/assets/pooja-products.jpg";
 
 const Products = () => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   
   const products = [
     {
@@ -133,7 +135,11 @@ const Products = () => {
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (
-            <Card key={product.id} className="group hover:shadow-sacred transition-divine overflow-hidden">
+            <Card 
+              key={product.id} 
+              className="group hover:shadow-sacred transition-divine overflow-hidden cursor-pointer"
+              onClick={() => navigate(`/products/${product.id}`)}
+            >
               <CardHeader className="p-0">
                 <div className="relative overflow-hidden">
                   <img
@@ -179,12 +185,15 @@ const Products = () => {
                 <Button 
                   variant="sacred" 
                   className="w-full group"
-                  onClick={() => addToCart({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                  })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                    });
+                  }}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                   Add to Cart
