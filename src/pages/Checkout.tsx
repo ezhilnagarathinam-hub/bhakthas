@@ -7,6 +7,17 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const checkoutSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().trim().regex(/^[0-9]{10}$/, "Phone must be exactly 10 digits"),
+  address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
+  city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
+  state: z.string().trim().min(1, "State is required").max(100, "State must be less than 100 characters"),
+  pincode: z.string().trim().regex(/^[0-9]{6}$/, "Pincode must be exactly 6 digits"),
+});
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -30,6 +41,19 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form data
+    const validation = checkoutSchema.safeParse(formData);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,7 +90,6 @@ const Checkout = () => {
       clearCart();
       navigate("/");
     } catch (error) {
-      console.error("Order error:", error);
       toast({
         title: "Order failed",
         description: "Something went wrong. Please try again.",

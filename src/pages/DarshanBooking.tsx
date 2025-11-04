@@ -10,6 +10,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Check } from "lucide-react";
 import { format } from "date-fns";
+import { z } from "zod";
+
+const bookingSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().trim().regex(/^[0-9]{10}$/, "Phone must be exactly 10 digits"),
+});
 
 interface Temple {
   id: string;
@@ -59,7 +66,6 @@ const DarshanBooking = () => {
       if (error) throw error;
       setTemple(data);
     } catch (error) {
-      console.error("Error fetching temple:", error);
       toast({
         title: "Error",
         description: "Failed to load temple details",
@@ -85,6 +91,18 @@ const DarshanBooking = () => {
       return;
     }
 
+    // Validate form data
+    const validation = bookingSchema.safeParse(formData);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -101,7 +119,12 @@ const DarshanBooking = () => {
       }
 
       const selectedDarshan = darshanOptions.find(opt => opt.type === selectedOption);
-      const invoiceNumber = `INV-${format(new Date(), "yyyyMMdd")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+      
+      // Generate cryptographically secure invoice number
+      const randomBytes = new Uint8Array(8);
+      crypto.getRandomValues(randomBytes);
+      const randomHex = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+      const invoiceNumber = `INV-${format(new Date(), "yyyyMMdd")}-${randomHex.substring(0, 12).toUpperCase()}`;
 
       const { data: booking, error } = await supabase
         .from("darshan_bookings")
@@ -113,9 +136,9 @@ const DarshanBooking = () => {
           darshan_date: format(date, "yyyy-MM-dd"),
           darshan_time: time,
           invoice_number: invoiceNumber,
-          customer_name: formData.name,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
+          customer_name: validation.data.name,
+          customer_email: validation.data.email,
+          customer_phone: validation.data.phone,
           status: "awaiting",
         })
         .select()
@@ -136,7 +159,6 @@ const DarshanBooking = () => {
         navigate(`/darshan/payment/${booking.id}`);
       }
     } catch (error) {
-      console.error("Booking error:", error);
       toast({
         title: "Booking failed",
         description: "Something went wrong. Please try again.",
