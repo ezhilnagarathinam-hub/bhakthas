@@ -20,35 +20,24 @@ const UsageReports = () => {
 
   const fetchStats = async () => {
     try {
-      const { data: { users } } = await supabase.auth.admin.listUsers();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      const { count: templesCount } = await supabase
-        .from('temples')
-        .select('*', { count: 'exact', head: true });
+      if (!session) {
+        toast({ title: "Error", description: "Authentication required", variant: "destructive" });
+        return;
+      }
 
-      const { count: visitsCount } = await supabase
-        .from('temple_visits')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: ordersCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
-
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('total_price');
-
-      const revenue = orders?.reduce((sum, order) => sum + parseFloat(order.total_price.toString()), 0) || 0;
-
-      setStats({
-        totalUsers: users?.length || 0,
-        totalTemples: templesCount || 0,
-        totalVisits: visitsCount || 0,
-        totalOrders: ordersCount || 0,
-        totalRevenue: revenue
+      const { data, error } = await supabase.functions.invoke('admin-stats', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
+
+      if (error) throw error;
+
+      setStats(data);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to fetch stats", variant: "destructive" });
     }
   };
 

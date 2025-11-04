@@ -1,1 +1,7 @@
 project_id = "hrukgkkfkfvrhfkhfslk"
+
+[functions.admin-list-users]
+verify_jwt = true
+
+[functions.admin-stats]
+verify_jwt = true

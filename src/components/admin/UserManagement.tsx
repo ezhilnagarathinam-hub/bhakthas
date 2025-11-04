@@ -16,24 +16,31 @@ const UserManagement = () => {
   }, []);
 
   const fetchUsers = async () => {
-    const { data: { users: authUsers }, error } = await supabase.auth.admin.listUsers();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({ title: "Error", description: "Authentication required", variant: "destructive" });
+        return;
+      }
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setUsers(authUsers || []);
+      const { data, error } = await supabase.functions.invoke('admin-list-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      setUsers(data.users || []);
+      setVisits(data.visits || []);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to fetch users", variant: "destructive" });
     }
   };
 
   const fetchVisits = async () => {
-    const { data, error } = await supabase
-      .from('temple_visits')
-      .select('user_id, points_earned')
-      .eq('verified', true);
-
-    if (!error && data) {
-      setVisits(data);
-    }
+    // Visits are now fetched with users
   };
 
   const getUserPoints = (userId: string) => {
