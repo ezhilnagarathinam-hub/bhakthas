@@ -192,6 +192,54 @@ export type Database = {
         }
         Relationships: []
       }
+      temple_contributions: {
+        Row: {
+          address: string | null
+          city: string
+          created_at: string
+          description: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          media_url: string | null
+          state: string
+          status: string
+          temple_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          city: string
+          created_at?: string
+          description: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          media_url?: string | null
+          state: string
+          status?: string
+          temple_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          city?: string
+          created_at?: string
+          description?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          media_url?: string | null
+          state?: string
+          status?: string
+          temple_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       temple_visits: {
         Row: {
           created_at: string
