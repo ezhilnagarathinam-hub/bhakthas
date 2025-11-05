@@ -17,6 +17,7 @@ export type Database = {
       darshan_bookings: {
         Row: {
           amount_paid: number
+          bhaktha_details: Json | null
           created_at: string
           customer_email: string
           customer_name: string
@@ -26,6 +27,8 @@ export type Database = {
           darshan_type: Database["public"]["Enums"]["darshan_type"]
           id: string
           invoice_number: string
+          main_bhaktha_index: number | null
+          number_of_tickets: number | null
           status: Database["public"]["Enums"]["booking_status"]
           temple_id: string
           updated_at: string
@@ -33,6 +36,7 @@ export type Database = {
         }
         Insert: {
           amount_paid?: number
+          bhaktha_details?: Json | null
           created_at?: string
           customer_email: string
           customer_name: string
@@ -42,6 +46,8 @@ export type Database = {
           darshan_type: Database["public"]["Enums"]["darshan_type"]
           id?: string
           invoice_number: string
+          main_bhaktha_index?: number | null
+          number_of_tickets?: number | null
           status?: Database["public"]["Enums"]["booking_status"]
           temple_id: string
           updated_at?: string
@@ -49,6 +55,7 @@ export type Database = {
         }
         Update: {
           amount_paid?: number
+          bhaktha_details?: Json | null
           created_at?: string
           customer_email?: string
           customer_name?: string
@@ -58,6 +65,8 @@ export type Database = {
           darshan_type?: Database["public"]["Enums"]["darshan_type"]
           id?: string
           invoice_number?: string
+          main_bhaktha_index?: number | null
+          number_of_tickets?: number | null
           status?: Database["public"]["Enums"]["booking_status"]
           temple_id?: string
           updated_at?: string
@@ -287,6 +296,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          deity: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -304,6 +314,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          deity?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -321,6 +332,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          deity?: string | null
           description?: string | null
           id?: string
           image_url?: string | null

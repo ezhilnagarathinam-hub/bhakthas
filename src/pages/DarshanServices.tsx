@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, Search } from "lucide-react";
 
 interface Temple {
   id: string;
@@ -19,13 +21,21 @@ interface Temple {
 
 const DarshanServices = () => {
   const [temples, setTemples] = useState<Temple[]>([]);
+  const [filteredTemples, setFilteredTemples] = useState<Temple[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTemples();
   }, []);
+
+  useEffect(() => {
+    filterTemples();
+  }, [temples, searchTerm, stateFilter, cityFilter]);
 
   const fetchTemples = async () => {
     try {
@@ -48,9 +58,32 @@ const DarshanServices = () => {
     }
   };
 
+  const filterTemples = () => {
+    let filtered = [...temples];
+
+    if (searchTerm) {
+      filtered = filtered.filter(temple =>
+        temple.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (stateFilter !== "all") {
+      filtered = filtered.filter(temple => temple.state === stateFilter);
+    }
+
+    if (cityFilter !== "all") {
+      filtered = filtered.filter(temple => temple.city === cityFilter);
+    }
+
+    setFilteredTemples(filtered);
+  };
+
   const handleBookDarshan = (templeId: string) => {
     navigate(`/darshan/book/${templeId}`);
   };
+
+  const uniqueStates = Array.from(new Set(temples.map(t => t.state).filter(Boolean)));
+  const uniqueCities = Array.from(new Set(temples.map(t => t.city).filter(Boolean)));
 
   if (loading) {
     return (
@@ -74,8 +107,49 @@ const DarshanServices = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Search and Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search temples by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select value={stateFilter} onValueChange={setStateFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by State" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {uniqueStates.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={cityFilter} onValueChange={setCityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by City" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {uniqueCities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {temples.map((temple) => (
+          {filteredTemples.map((temple) => (
             <Card key={temple.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="aspect-video overflow-hidden">
                 <img
@@ -115,9 +189,11 @@ const DarshanServices = () => {
           ))}
         </div>
 
-        {temples.length === 0 && (
+        {filteredTemples.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No temples available at the moment</p>
+            <p className="text-muted-foreground">
+              {temples.length === 0 ? "No temples available at the moment" : "No temples match your filters"}
+            </p>
           </div>
         )}
       </div>

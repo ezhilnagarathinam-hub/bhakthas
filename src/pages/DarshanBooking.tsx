@@ -12,6 +12,12 @@ import { CalendarIcon, Check } from "lucide-react";
 import { format } from "date-fns";
 import { z } from "zod";
 
+const bhakthaSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  age: z.number().min(1, "Age is required").max(150, "Invalid age"),
+  contact: z.string().trim().optional(),
+});
+
 const bookingSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
@@ -43,6 +49,9 @@ const DarshanBooking = () => {
   const [selectedOption, setSelectedOption] = useState<DarshanType | null>(null);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("10:00");
+  const [numberOfTickets, setNumberOfTickets] = useState(1);
+  const [bhakthas, setBhakthas] = useState([{ name: "", age: 0, contact: "" }]);
+  const [mainBhakthaIndex, setMainBhakthaIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -79,6 +88,28 @@ const DarshanBooking = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleTicketChange = (newCount: number) => {
+    setNumberOfTickets(newCount);
+    const updatedBhakthas = [...bhakthas];
+    if (newCount > bhakthas.length) {
+      for (let i = bhakthas.length; i < newCount; i++) {
+        updatedBhakthas.push({ name: "", age: 0, contact: "" });
+      }
+    } else {
+      updatedBhakthas.splice(newCount);
+    }
+    setBhakthas(updatedBhakthas);
+    if (mainBhakthaIndex >= newCount) {
+      setMainBhakthaIndex(Math.max(0, newCount - 1));
+    }
+  };
+
+  const handleBhakthaChange = (index: number, field: string, value: string | number) => {
+    const updated = [...bhakthas];
+    updated[index] = { ...updated[index], [field]: value };
+    setBhakthas(updated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,6 +132,23 @@ const DarshanBooking = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate bhaktha details
+    for (let i = 0; i < bhakthas.length; i++) {
+      const bhakthaValidation = bhakthaSchema.safeParse({
+        ...bhakthas[i],
+        age: Number(bhakthas[i].age) || 0,
+      });
+      if (!bhakthaValidation.success) {
+        const firstError = bhakthaValidation.error.errors[0];
+        toast({
+          title: `Bhaktha ${i + 1} Validation Error`,
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -140,6 +188,13 @@ const DarshanBooking = () => {
           customer_email: validation.data.email,
           customer_phone: validation.data.phone,
           status: "awaiting",
+          number_of_tickets: numberOfTickets,
+          bhaktha_details: bhakthas.map(b => ({
+            name: b.name,
+            age: Number(b.age),
+            contact: b.contact || "",
+          })),
+          main_bhaktha_index: mainBhakthaIndex,
         })
         .select()
         .single();
@@ -267,6 +322,84 @@ const DarshanBooking = () => {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="tickets">Number of Tickets</Label>
+                <Input
+                  id="tickets"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={numberOfTickets}
+                  onChange={(e) => handleTicketChange(Number(e.target.value))}
+                  required
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bhaktha Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Bhaktha Details</CardTitle>
+              <CardDescription>Please provide details for all bhakthas</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {bhakthas.map((bhaktha, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-4 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Bhaktha {index + 1}</h4>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="mainBhaktha"
+                        checked={mainBhakthaIndex === index}
+                        onChange={() => setMainBhakthaIndex(index)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-muted-foreground">Main Bhaktha</span>
+                    </label>
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`bhaktha-name-${index}`}>Name *</Label>
+                      <Input
+                        id={`bhaktha-name-${index}`}
+                        required
+                        value={bhaktha.name}
+                        onChange={(e) => handleBhakthaChange(index, "name", e.target.value)}
+                        placeholder="Full name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`bhaktha-age-${index}`}>Age *</Label>
+                      <Input
+                        id={`bhaktha-age-${index}`}
+                        type="number"
+                        min="1"
+                        max="150"
+                        required
+                        value={bhaktha.age || ""}
+                        onChange={(e) => handleBhakthaChange(index, "age", Number(e.target.value))}
+                        placeholder="Age"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`bhaktha-contact-${index}`}>Contact</Label>
+                      <Input
+                        id={`bhaktha-contact-${index}`}
+                        value={bhaktha.contact}
+                        onChange={(e) => handleBhakthaChange(index, "contact", e.target.value)}
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </div>
+                  {mainBhakthaIndex === index && (
+                    <p className="text-xs text-primary">
+                      ✓ Confirmation and contact will be sent to this bhaktha
+                    </p>
+                  )}
+                </div>
+              ))}
             </CardContent>
           </Card>
 
