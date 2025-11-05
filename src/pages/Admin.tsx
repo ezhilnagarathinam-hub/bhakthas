@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart } from "lucide-react";
+import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ProductManagement from "@/components/admin/ProductManagement";
@@ -12,6 +12,7 @@ import OrderManagement from "@/components/admin/OrderManagement";
 import UserManagement from "@/components/admin/UserManagement";
 import UsageReports from "@/components/admin/UsageReports";
 import DarshanBookingManagement from "@/components/admin/DarshanBookingManagement";
+import ContributionManagement from "@/components/admin/ContributionManagement";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -87,8 +88,12 @@ const Admin = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid grid-cols-3 lg:grid-cols-7 gap-2">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">Products</span>
@@ -109,15 +114,19 @@ const Admin = () => {
               <MapPin className="w-4 h-4" />
               <span className="hidden sm:inline">Darshan</span>
             </TabsTrigger>
+            <TabsTrigger value="contributions" className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Contributions</span>
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <BarChart className="w-4 h-4" />
-              <span className="hidden sm:inline">Reports</span>
-            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <UsageReports />
+          </TabsContent>
 
           <TabsContent value="products">
             <ProductManagement />
@@ -139,12 +148,12 @@ const Admin = () => {
             <DarshanBookingManagement />
           </TabsContent>
 
-          <TabsContent value="users">
-            <UserManagement />
+          <TabsContent value="contributions">
+            <ContributionManagement />
           </TabsContent>
 
-          <TabsContent value="reports">
-            <UsageReports />
+          <TabsContent value="users">
+            <UserManagement />
           </TabsContent>
         </Tabs>
       </div>

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, ShoppingBag, MapPin, Star, Award, Gift } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const UserDashboard = () => {
@@ -118,13 +119,22 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-sacred bg-clip-text text-transparent mb-2">
-            My Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.email?.split('@')[0]}!
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-sacred bg-clip-text text-transparent mb-2">
+              My Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.email?.split('@')[0]}!
+            </p>
+          </div>
+          <Button 
+            onClick={() => navigate('/contribute')}
+            className="bg-gradient-sacred hover:opacity-90"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Contribute Temple
+          </Button>
         </div>
 
         {/* Stats Overview */}

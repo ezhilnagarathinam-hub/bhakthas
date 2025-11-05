@@ -20,6 +20,7 @@ import TempleDetailLayout from "./pages/TempleDetailLayout";
 import AdminLayout from "./pages/AdminLayout";
 import AuthLayout from "./pages/AuthLayout";
 import UserDashboardLayout from "./pages/UserDashboardLayout";
+import ContributeLayout from "./pages/ContributeLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/knowledge-hub" element={<KnowledgeHubLayout />} />
             <Route path="/knowledge-hub/:templeId" element={<TempleDetailLayout />} />
             <Route path="/dashboard" element={<UserDashboardLayout />} />
+            <Route path="/contribute" element={<ContributeLayout />} />
             <Route path="/admin" element={<AdminLayout />} />
             <Route path="/auth" element={<AuthLayout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
