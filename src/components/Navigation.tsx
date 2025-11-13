@@ -1,31 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart } from "lucide-react";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { totalItems } = useCart();
+  const { user, isAdmin } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -98,6 +88,14 @@ const Navigation = () => {
             </Button>
             {user ? (
               <>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" asChild className="border-amber-500/30 text-amber-600 hover:bg-amber-50">
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/dashboard" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
@@ -166,6 +164,14 @@ const Navigation = () => {
               </Button>
               {user ? (
                 <>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" className="w-full border-amber-500/30 text-amber-600" asChild>
+                      <Link to="/admin" onClick={() => setIsOpen(false)}>
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </Link>
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="w-full" asChild>
                     <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                       <User className="h-4 w-4 mr-2" />

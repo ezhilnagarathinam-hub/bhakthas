@@ -17,16 +17,32 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const checkUserAndRedirect = async (session: any) => {
+      if (session) {
+        // Check if user is admin
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .single();
+
+        if (data) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }
+    };
+
     // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/');
-      }
+      checkUserAndRedirect(session);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate('/');
+        setTimeout(() => checkUserAndRedirect(session), 100);
       }
     });
 
