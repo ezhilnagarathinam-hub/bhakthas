@@ -52,7 +52,11 @@ const Admin = () => {
 
       setIsAdmin(true);
     } catch (error) {
-      console.error('Admin access check failed:', error);
+      toast({
+        title: "Access Error",
+        description: "Failed to verify admin access",
+        variant: "destructive"
+      });
       navigate('/');
     } finally {
       setLoading(false);

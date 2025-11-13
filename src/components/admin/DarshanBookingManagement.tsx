@@ -48,18 +48,21 @@ const DarshanBookingManagement = () => {
 
   const fetchBookings = async () => {
     try {
-      const { data, error } = await supabase
-        .from("darshan_bookings")
-        .select(`
-          *,
-          temples (name)
-        `)
-        .order("created_at", { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-list-bookings', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
-      setBookings(data || []);
+      setBookings(data.bookings || []);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
       toast({
         title: "Error",
         description: "Failed to load bookings",
@@ -90,7 +93,6 @@ const DarshanBookingManagement = () => {
         description: `Booking status changed to ${newStatus}`,
       });
     } catch (error) {
-      console.error("Error updating status:", error);
       toast({
         title: "Error",
         description: "Failed to update booking status",
