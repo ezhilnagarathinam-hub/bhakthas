@@ -8,112 +8,117 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 280 20% 99%;
-    --foreground: 280 10% 10%;
+    --background: 0 0% 100%;
+    --foreground: 20 14% 10%;
 
-    --card: 280 30% 98%;
-    --card-foreground: 280 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 10%;
 
-    --popover: 280 30% 98%;
-    --popover-foreground: 280 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
 
-    --primary: 280 70% 50%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 320 80% 55%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 39 100% 50%;
+    --secondary-foreground: 20 14% 10%;
 
-    --muted: 280 10% 95%;
-    --muted-foreground: 280 5% 45%;
+    --muted: 33 100% 96%;
+    --muted-foreground: 33 30% 40%;
 
-    --accent: 39 100% 50%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 14 100% 57%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 280 15% 90%;
-    --input: 280 15% 90%;
-    --ring: 280 70% 50%;
+    --border: 33 100% 85%;
+    --input: 33 100% 85%;
+    --ring: 24 95% 53%;
 
     --radius: 0.75rem;
 
-    /* Divine Gradients - Vibrant & Spiritual */
-    --gradient-sacred: linear-gradient(135deg, hsl(280, 70%, 50%), hsl(320, 80%, 55%), hsl(39, 100%, 50%));
-    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(24, 95%, 53%));
-    --gradient-temple: linear-gradient(135deg, hsl(280, 70%, 50%) 0%, hsl(320, 80%, 55%) 50%, hsl(39, 100%, 50%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(260, 80%, 60%), hsl(300, 70%, 60%));
-    --gradient-enlighten: linear-gradient(180deg, hsl(39, 100%, 95%), hsl(280, 70%, 98%));
+    /* Admin Portal Colors - Devotional Bhakthi Theme */
+    --admin-bg: 30 15% 8%;
+    --admin-surface: 30 20% 12%;
+    --admin-border: 39 60% 25%;
+    --admin-accent: 24 95% 53%;
+    --admin-accent-light: 39 100% 60%;
+    --admin-text: 33 100% 96%;
+    --admin-text-muted: 33 30% 60%;
+
+    /* Divine Gradients - Saffron & Golden */
+    --gradient-sacred: linear-gradient(135deg, hsl(24, 95%, 53%), hsl(39, 100%, 50%), hsl(14, 100%, 57%));
+    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(45, 100%, 51%));
+    --gradient-temple: linear-gradient(135deg, hsl(14, 100%, 57%) 0%, hsl(24, 95%, 53%) 50%, hsl(39, 100%, 50%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(30, 100%, 40%), hsl(24, 95%, 53%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(39, 100%, 95%), hsl(45, 100%, 98%));
+    --gradient-admin: linear-gradient(135deg, hsl(30, 15%, 8%), hsl(30, 20%, 12%), hsl(30, 15%, 8%));
     
-    /* Divine Shadows - More Prominent */
-    --shadow-sacred: 0 20px 60px -15px hsl(280 70% 50% / 0.4);
-    --shadow-divine: 0 0 80px hsl(320 80% 55% / 0.3);
-    --shadow-glow: 0 0 100px hsl(39 100% 50% / 0.5);
+    /* Divine Shadows - Saffron Glow */
+    --shadow-sacred: 0 20px 60px -15px hsl(24 95% 53% / 0.5);
+    --shadow-divine: 0 0 80px hsl(39 100% 50% / 0.4);
+    --shadow-glow: 0 0 100px hsl(14 100% 57% / 0.6);
+    --shadow-admin: 0 10px 40px -10px hsl(39 60% 25% / 0.5);
     
     /* Animations */
     --transition-sacred: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-divine: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 280 30% 5%;
-    --foreground: 0 0% 98%;
+    --background: 30 15% 8%;
+    --foreground: 33 100% 96%;
 
-    --card: 280 25% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 30 20% 12%;
+    --card-foreground: 33 100% 96%;
 
-    --popover: 280 25% 8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 30 20% 12%;
+    --popover-foreground: 33 100% 96%;
 
-    --primary: 280 70% 60%;
-    --primary-foreground: 0 0% 10%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 320 80% 65%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 39 100% 50%;
+    --secondary-foreground: 20 14% 10%;
 
-    --muted: 280 20% 15%;
-    --muted-foreground: 280 10% 65%;
+    --muted: 30 20% 18%;
+    --muted-foreground: 33 30% 60%;
 
-    --accent: 39 100% 60%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 14 100% 57%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 280 20% 18%;
-    --input: 280 20% 18%;
-    --ring: 280 70% 60%;
+    --border: 39 60% 25%;
+    --input: 39 60% 25%;
+    --ring: 24 95% 53%;
 
-    /* Dark mode gradients - More vibrant */
-    --gradient-sacred: linear-gradient(135deg, hsl(280, 70%, 60%), hsl(320, 80%, 65%), hsl(39, 100%, 60%));
-    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 60%), hsl(24, 95%, 63%));
-    --gradient-temple: linear-gradient(135deg, hsl(280, 70%, 60%) 0%, hsl(320, 80%, 65%) 50%, hsl(39, 100%, 60%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(260, 80%, 70%), hsl(300, 70%, 70%));
-    --gradient-enlighten: linear-gradient(180deg, hsl(0, 0%, 10%), hsl(280, 70%, 20%));
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Dark mode gradients - Devotional */
+    --gradient-sacred: linear-gradient(135deg, hsl(24, 95%, 53%), hsl(39, 100%, 50%), hsl(14, 100%, 57%));
+    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(45, 100%, 51%));
+    --gradient-temple: linear-gradient(135deg, hsl(14, 100%, 57%) 0%, hsl(24, 95%, 53%) 50%, hsl(39, 100%, 50%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(30, 100%, 40%), hsl(24, 95%, 53%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(30, 15%, 8%), hsl(30, 20%, 15%));
+    --gradient-admin: linear-gradient(135deg, hsl(30, 15%, 8%), hsl(30, 20%, 12%), hsl(30, 15%, 8%));
+    --sidebar-background: 30 15% 8%;
+    --sidebar-foreground: 33 100% 96%;
+    --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 30 20% 18%;
+    --sidebar-accent-foreground: 33 100% 96%;
+    --sidebar-border: 39 60% 25%;
+    --sidebar-ring: 24 95% 53%;
   }
 }
 

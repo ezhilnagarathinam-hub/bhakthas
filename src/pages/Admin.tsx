@@ -77,15 +77,15 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-amber-500/20">
+      <div className="bg-gradient-admin border-b border-admin-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center gap-3">
-            <Shield className="w-10 h-10 text-amber-500" />
+            <Shield className="w-10 h-10 text-admin-accent" />
             <div>
-              <h1 className="text-4xl font-bold text-white">
+              <h1 className="text-4xl font-bold text-admin-text">
                 Admin Dashboard
               </h1>
-              <p className="text-gray-400">Manage your spiritual platform</p>
+              <p className="text-admin-text-muted">Manage your spiritual platform</p>
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-2 bg-slate-800 border border-amber-500/20">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-2 bg-admin-surface border border-admin-border">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
