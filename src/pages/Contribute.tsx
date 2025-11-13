@@ -8,6 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Upload, Image as ImageIcon, Video } from "lucide-react";
+import { z } from "zod";
+
+const contributeSchema = z.object({
+  templeName: z.string().trim().min(1, "Temple name is required").max(200, "Temple name must be less than 200 characters"),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters"),
+  address: z.string().trim().max(300, "Address must be less than 300 characters").optional(),
+  city: z.string().trim().min(1, "City is required").max(100, "City must be less than 100 characters"),
+  state: z.string().trim().min(1, "State is required").max(100, "State must be less than 100 characters"),
+  latitude: z.string().refine((val) => {
+    if (!val) return true;
+    const num = parseFloat(val);
+    return !isNaN(num) && num >= -90 && num <= 90;
+  }, "Latitude must be between -90 and 90").optional(),
+  longitude: z.string().refine((val) => {
+    if (!val) return true;
+    const num = parseFloat(val);
+    return !isNaN(num) && num >= -180 && num <= 180;
+  }, "Longitude must be between -180 and 180").optional()
+});
 
 const Contribute = () => {
   const [user, setUser] = useState<any>(null);
@@ -72,11 +91,36 @@ const Contribute = () => {
     setLoading(true);
 
     try {
+      // Validate form data
+      const validationResult = contributeSchema.safeParse(formData);
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate file size if media is uploaded (max 10MB)
+      if (mediaFile && mediaFile.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Media file must be less than 10MB",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       let mediaUrl = "";
 
       if (mediaFile) {
         const fileExt = mediaFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -92,17 +136,19 @@ const Contribute = () => {
         mediaUrl = publicUrl;
       }
 
+      const validatedData = validationResult.data;
+
       const { error } = await supabase
         .from('temple_contributions')
         .insert({
           user_id: user.id,
-          temple_name: formData.templeName,
-          description: formData.description,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+          temple_name: validatedData.templeName,
+          description: validatedData.description,
+          address: validatedData.address || null,
+          city: validatedData.city,
+          state: validatedData.state,
+          latitude: validatedData.latitude ? parseFloat(validatedData.latitude) : null,
+          longitude: validatedData.longitude ? parseFloat(validatedData.longitude) : null,
           media_url: mediaUrl,
           status: 'pending'
         });
