@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        admin: {
+          bg: "hsl(var(--admin-bg))",
+          surface: "hsl(var(--admin-surface))",
+          border: "hsl(var(--admin-border))",
+          accent: "hsl(var(--admin-accent))",
+          "accent-light": "hsl(var(--admin-accent-light))",
+          text: "hsl(var(--admin-text))",
+          "text-muted": "hsl(var(--admin-text-muted))",
+        },
       },
       backgroundImage: {
         "gradient-sacred": "var(--gradient-sacred)",
@@ -64,11 +73,13 @@ export default {
         "gradient-temple": "var(--gradient-temple)",
         "gradient-mystic": "var(--gradient-mystic)",
         "gradient-enlighten": "var(--gradient-enlighten)",
+        "gradient-admin": "var(--gradient-admin)",
       },
       boxShadow: {
         "sacred": "var(--shadow-sacred)",
         "divine": "var(--shadow-divine)",
         "glow": "var(--shadow-glow)",
+        "admin": "var(--shadow-admin)",
       },
       transitionTimingFunction: {
         "sacred": "var(--transition-sacred)",
