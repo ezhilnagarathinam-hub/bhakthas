@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-temple.jpg";
 import FeaturedTempleInfo from "./FeaturedTempleInfo";
 const Hero = () => {
-  return <section className="relative min-h-screen flex items-center overflow-hidden">
+  return <section className="relative min-h-screen flex items-center overflow-hidden font-poppins">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img src={heroImage} alt="Sacred Temple" className="w-full h-full object-cover" />
@@ -14,11 +14,11 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+              <h1 className="text-5xl md:text-7xl font-bold leading-tight font-cinzel">
                 <span className="block text-foreground">Welcome to</span>
-                <span className="block bg-gradient-sacred bg-clip-text text-transparent">
+                <span className="block bg-gradient-sacred bg-clip-text text-transparent animate-divine-shine" style={{ backgroundSize: '200% 200%' }}>
                   Bhakthas
                 </span>
               </h1>
@@ -30,13 +30,13 @@ const Hero = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/products">
-                <Button variant="sacred" size="lg" className="group">
+                <Button variant="sacred" size="lg" className="group animate-glow-pulse">
                   Explore Products
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link to="/bhakthi">
-                <Button variant="outline" size="lg" className="group">
+                <Button variant="outline" size="lg" className="group hover:animate-prayer-hands">
                   Test My Bhakthi
                   <MapPin className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                 </Button>
@@ -44,7 +44,7 @@ const Hero = () => {
               <Link to="/knowledge-hub">
                 <Button variant="mystic" size="lg" className="group">
                   Knowledge Hub
-                  <Star className="ml-2 h-5 w-5 group-hover:rotate-180 transition-transform" />
+                  <Star className="ml-2 h-5 w-5 group-hover:rotate-180 transition-transform animate-float" />
                 </Button>
               </Link>
             </div>

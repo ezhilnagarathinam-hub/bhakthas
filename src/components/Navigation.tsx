@@ -36,15 +36,15 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-background/90 backdrop-blur-md border-b-2 border-primary/20 sticky top-0 z-50 shadow-sacred">
+    <nav className="bg-background/90 backdrop-blur-md border-b-2 border-primary/20 sticky top-0 z-50 shadow-sacred font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 bg-gradient-sacred rounded-xl flex items-center justify-center shadow-divine group-hover:scale-110 transition-transform">
-                <span className="text-white font-bold text-xl">भ</span>
+              <div className="w-12 h-12 bg-gradient-sacred rounded-xl flex items-center justify-center shadow-divine group-hover:scale-110 transition-transform animate-glow-pulse">
+                <span className="text-white font-bold text-xl animate-om-rotate">भ</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-sacred bg-clip-text text-transparent font-cinzel">
                 Bhakthas
               </span>
             </Link>
