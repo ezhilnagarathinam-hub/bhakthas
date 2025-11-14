@@ -38,28 +38,28 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Admin Portal Colors - Devotional Bhakthi Theme */
-    --admin-bg: 30 15% 8%;
-    --admin-surface: 30 20% 12%;
-    --admin-border: 39 60% 25%;
-    --admin-accent: 24 95% 53%;
-    --admin-accent-light: 39 100% 60%;
-    --admin-text: 33 100% 96%;
-    --admin-text-muted: 33 30% 60%;
+    /* Admin Portal Colors - Red & Yellow Divine Theme */
+    --admin-bg: 0 50% 10%;
+    --admin-surface: 0 40% 15%;
+    --admin-border: 45 100% 50%;
+    --admin-accent: 0 85% 55%;
+    --admin-accent-light: 45 100% 55%;
+    --admin-text: 45 100% 96%;
+    --admin-text-muted: 45 60% 70%;
 
-    /* Divine Gradients - Saffron & Golden */
-    --gradient-sacred: linear-gradient(135deg, hsl(24, 95%, 53%), hsl(39, 100%, 50%), hsl(14, 100%, 57%));
-    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(45, 100%, 51%));
-    --gradient-temple: linear-gradient(135deg, hsl(14, 100%, 57%) 0%, hsl(24, 95%, 53%) 50%, hsl(39, 100%, 50%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(30, 100%, 40%), hsl(24, 95%, 53%));
-    --gradient-enlighten: linear-gradient(180deg, hsl(39, 100%, 95%), hsl(45, 100%, 98%));
-    --gradient-admin: linear-gradient(135deg, hsl(30, 15%, 8%), hsl(30, 20%, 12%), hsl(30, 15%, 8%));
+    /* Divine Gradients - Red & Yellow Sacred */
+    --gradient-sacred: linear-gradient(135deg, hsl(0, 85%, 55%), hsl(45, 100%, 50%), hsl(30, 100%, 50%));
+    --gradient-divine: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(55, 100%, 55%));
+    --gradient-temple: linear-gradient(135deg, hsl(0, 85%, 55%) 0%, hsl(30, 100%, 50%) 50%, hsl(45, 100%, 50%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(0, 70%, 45%), hsl(0, 85%, 55%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(45, 100%, 95%), hsl(55, 100%, 98%));
+    --gradient-admin: linear-gradient(135deg, hsl(0, 50%, 10%), hsl(0, 40%, 15%), hsl(45, 100%, 20%));
     
-    /* Divine Shadows - Saffron Glow */
-    --shadow-sacred: 0 20px 60px -15px hsl(24 95% 53% / 0.5);
-    --shadow-divine: 0 0 80px hsl(39 100% 50% / 0.4);
-    --shadow-glow: 0 0 100px hsl(14 100% 57% / 0.6);
-    --shadow-admin: 0 10px 40px -10px hsl(39 60% 25% / 0.5);
+    /* Divine Shadows - Red & Yellow Glow */
+    --shadow-sacred: 0 20px 60px -15px hsl(0 85% 55% / 0.5);
+    --shadow-divine: 0 0 80px hsl(45 100% 50% / 0.4);
+    --shadow-glow: 0 0 100px hsl(0 85% 55% / 0.6);
+    --shadow-admin: 0 10px 40px -10px hsl(45 100% 50% / 0.5);
     
     /* Animations */
     --transition-sacred: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -104,13 +104,13 @@ All colors MUST be HSL.
     --input: 39 60% 25%;
     --ring: 24 95% 53%;
 
-    /* Dark mode gradients - Devotional */
-    --gradient-sacred: linear-gradient(135deg, hsl(24, 95%, 53%), hsl(39, 100%, 50%), hsl(14, 100%, 57%));
-    --gradient-divine: linear-gradient(135deg, hsl(39, 100%, 50%), hsl(45, 100%, 51%));
-    --gradient-temple: linear-gradient(135deg, hsl(14, 100%, 57%) 0%, hsl(24, 95%, 53%) 50%, hsl(39, 100%, 50%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(30, 100%, 40%), hsl(24, 95%, 53%));
-    --gradient-enlighten: linear-gradient(180deg, hsl(30, 15%, 8%), hsl(30, 20%, 15%));
-    --gradient-admin: linear-gradient(135deg, hsl(30, 15%, 8%), hsl(30, 20%, 12%), hsl(30, 15%, 8%));
+    /* Dark mode gradients - Red & Yellow Divine */
+    --gradient-sacred: linear-gradient(135deg, hsl(0, 85%, 55%), hsl(45, 100%, 50%), hsl(30, 100%, 50%));
+    --gradient-divine: linear-gradient(135deg, hsl(45, 100%, 50%), hsl(55, 100%, 55%));
+    --gradient-temple: linear-gradient(135deg, hsl(0, 85%, 55%) 0%, hsl(30, 100%, 50%) 50%, hsl(45, 100%, 50%) 100%);
+    --gradient-mystic: linear-gradient(135deg, hsl(0, 70%, 45%), hsl(0, 85%, 55%));
+    --gradient-enlighten: linear-gradient(180deg, hsl(0, 50%, 10%), hsl(0, 40%, 15%));
+    --gradient-admin: linear-gradient(135deg, hsl(0, 50%, 10%), hsl(0, 40%, 15%), hsl(45, 100%, 20%));
     --sidebar-background: 30 15% 8%;
     --sidebar-foreground: 33 100% 96%;
     --sidebar-primary: 24 95% 53%;
