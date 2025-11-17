@@ -14,6 +14,7 @@ import UsageReports from "@/components/admin/UsageReports";
 import Analytics from "@/components/admin/Analytics";
 import DarshanBookingManagement from "@/components/admin/DarshanBookingManagement";
 import ContributionManagement from "@/components/admin/ContributionManagement";
+import ReportDownload from "@/components/admin/ReportDownload";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -80,27 +81,28 @@ const Admin = () => {
     <div className="min-h-screen bg-gradient-admin font-poppins">
       <div className="bg-gradient-to-r from-red-900 via-red-800 to-yellow-700 border-b-2 border-yellow-500/50 shadow-glow animate-divine-shine" style={{ backgroundSize: '200% 200%' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center gap-3 animate-fade-in">
-            <div className="animate-glow-pulse">
-              <Shield className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]" />
+          <div className="flex items-center justify-between animate-fade-in">
+            <div className="flex items-center gap-3">
+              <div className="animate-glow-pulse">
+                <Shield className="w-12 h-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]" />
+              </div>
+              <div>
+                <h1 className="text-5xl font-bold text-white font-cinzel drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                  Admin Dashboard
+                </h1>
+                <p className="text-yellow-200 text-lg">Manage your spiritual platform with divine grace</p>
+              </div>
             </div>
             <div>
-              <h1 className="text-5xl font-bold text-white font-cinzel drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-                Admin Dashboard
-              </h1>
-              <p className="text-yellow-200 text-lg">Manage your spiritual platform with divine grace</p>
+              <ReportDownload />
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-2 bg-gradient-to-r from-red-950 to-yellow-950 border-2 border-yellow-600/30 p-2 shadow-divine">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -134,10 +136,6 @@ const Admin = () => {
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="dashboard">
-            <UsageReports />
-          </TabsContent>
 
           <TabsContent value="analytics">
             <Analytics />
