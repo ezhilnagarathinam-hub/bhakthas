@@ -177,7 +177,7 @@ const ContributionManagement = () => {
 
   return (
     <>
-      <Card className="bg-admin-surface border-admin-border">
+      <Card className="bg-white border-admin-border shadow-divine">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-admin-text">Temple Contributions</CardTitle>
           <div className="flex gap-2">
