@@ -54,7 +54,10 @@ const KnowledgeHub = () => {
           .order('temple_name')
       ]);
       
-      if (templesData.error) throw templesData.error;
+      if (templesData.error) {
+        console.error('Database error:', templesData.error);
+        throw templesData.error;
+      }
       
       // Convert contributions to temple format
       const contributionTemples = (contributionsData.data || []).map(contrib => ({
@@ -70,12 +73,14 @@ const KnowledgeHub = () => {
         points: 100,
       }));
       
-      setTemples([...(templesData.data || []), ...contributionTemples]);
-    } catch (error) {
+      const allTemples = [...(templesData.data || []), ...contributionTemples];
+      setTemples(allTemples);
+      setFilteredTemples(allTemples);
+    } catch (error: any) {
       console.error('Error fetching temples:', error);
       toast({
-        title: "Error",
-        description: "Failed to load temples",
+        title: "Error Loading Knowledge Hub",
+        description: error.message || "Failed to load temples. Please refresh the page.",
         variant: "destructive",
       });
     } finally {

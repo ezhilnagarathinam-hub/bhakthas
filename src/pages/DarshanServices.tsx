@@ -39,18 +39,24 @@ const DarshanServices = () => {
 
   const fetchTemples = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from("temples")
         .select("*")
         .order("name");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+      
       setTemples(data || []);
-    } catch (error) {
+      setFilteredTemples(data || []);
+    } catch (error: any) {
       console.error("Error fetching temples:", error);
       toast({
-        title: "Error",
-        description: "Failed to load temples",
+        title: "Error Loading Temples",
+        description: error.message || "Failed to load temples. Please refresh the page.",
         variant: "destructive",
       });
     } finally {

@@ -60,10 +60,10 @@ const UserDashboard = () => {
 
       setBookings(bookingsData || []);
 
-      // Fetch bhakthi score (verified temple visits)
+      // Fetch all temple visits (verified)
       const { data: visitsData } = await supabase
         .from('temple_visits')
-        .select('points_earned')
+        .select('points_earned, temple_id')
         .eq('user_id', userId)
         .eq('verified', true);
 
@@ -77,6 +77,11 @@ const UserDashboard = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
       setLoading(false);
     }
   };
@@ -138,91 +143,114 @@ const UserDashboard = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-sacred text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                Bhakthi Score
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-sacred border-2 border-yellow-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <MapPin className="w-5 h-5" />
+                Temples Visited
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{bhakthiScore}</div>
-              <p className="text-xs text-white/80 mt-1">
-                Total points earned
-              </p>
+              <p className="text-4xl font-bold text-white">{bookings.filter(b => b.status === 'confirmed').length}</p>
+              <p className="text-sm text-yellow-200 mt-2">Verified Visits</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Gift className="h-4 w-4 text-primary" />
-                Credit Points
+          <Card className="bg-gradient-mystic border-2 border-blue-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <ShoppingBag className="w-5 h-5" />
+                Products Purchased
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{creditPoints}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Available credits
-              </p>
+              <p className="text-4xl font-bold text-white">{orders.length}</p>
+              <p className="text-sm text-blue-200 mt-2">Total Orders</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Star className="h-4 w-4 text-accent" />
-                Discount Earned
+          <Card className="bg-gradient-peaceful border-2 border-green-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Trophy className="w-5 h-5" />
+                Bhakthi Points
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-accent">{getDiscountPercentage()}%</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                On next purchase
-              </p>
+              <p className="text-4xl font-bold text-white">{bhakthiScore}</p>
+              <p className="text-sm text-green-200 mt-2">Total Points</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Award className="h-4 w-4 text-secondary" />
-                Progress
+          <Card className="bg-gradient-to-br from-purple-900 to-indigo-900 border-2 border-purple-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Gift className="w-5 h-5" />
+                Available Discount
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-secondary">
-                {bhakthiScore % 1000}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                / 1000 to next reward
-              </p>
+              <p className="text-4xl font-bold text-white">{getDiscountPercentage()}%</p>
+              <p className="text-sm text-purple-200 mt-2">Current Discount</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Progress to Next Reward */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Progress to Next Reward
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Current: {bhakthiScore % 1000} points</span>
-                <span>Next Reward: 1000 points</span>
+        {/* Detailed Analytics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Discounts Availed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {orders.slice(0, 5).map((order, index) => (
+                  <div key={order.id} className="flex justify-between items-center border-b pb-2">
+                    <span className="text-sm">Order #{index + 1}</span>
+                    <Badge variant="secondary">{getDiscountPercentage()}% discount</Badge>
+                  </div>
+                ))}
+                {orders.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No discounts used yet</p>
+                )}
               </div>
-              <Progress value={getProgressToNextReward()} className="h-3" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              🎯 Earn {1000 - (bhakthiScore % 1000)} more points to unlock 25% discount!
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                Remaining Points & Discount
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Points to Next Level</p>
+                  <Progress value={getProgressToNextReward()} className="mb-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {1000 - (bhakthiScore % 1000)} points needed for next 25% discount
+                  </p>
+                </div>
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Current Points:</span>
+                    <span className="text-lg font-bold text-primary">{bhakthiScore}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-sm font-medium">Equivalent Discount:</span>
+                    <span className="text-lg font-bold text-green-600">{getDiscountPercentage()}%</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Detailed Information Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
