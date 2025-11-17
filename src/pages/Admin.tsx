@@ -11,6 +11,7 @@ import MantraManagement from "@/components/admin/MantraManagement";
 import OrderManagement from "@/components/admin/OrderManagement";
 import UserManagement from "@/components/admin/UserManagement";
 import UsageReports from "@/components/admin/UsageReports";
+import Analytics from "@/components/admin/Analytics";
 import DarshanBookingManagement from "@/components/admin/DarshanBookingManagement";
 import ContributionManagement from "@/components/admin/ContributionManagement";
 
@@ -100,6 +101,10 @@ const Admin = () => {
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               <span className="hidden sm:inline">Products</span>
@@ -132,6 +137,10 @@ const Admin = () => {
 
           <TabsContent value="dashboard">
             <UsageReports />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <Analytics />
           </TabsContent>
 
           <TabsContent value="products">

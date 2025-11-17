@@ -77,10 +77,10 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-2">
             <Button variant="outline" size="sm" asChild className="relative">
               <Link to="/cart" className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                Cart
+                <ShoppingCart className="h-4 w-4 animate-glow-pulse" />
+                <span className="hidden lg:inline">Cart</span>
                 {totalItems > 0 && (
-                  <Badge className="ml-1 bg-accent text-accent-foreground">
+                  <Badge className="ml-1 bg-red-600 text-white h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
                     {totalItems}
                   </Badge>
                 )}
@@ -88,23 +88,23 @@ const Navigation = () => {
             </Button>
             {user ? (
               <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/dashboard" className="flex items-center gap-2">
+                    <User className="h-4 w-4 animate-om-rotate" />
+                    <span className="hidden lg:inline">Dashboard</span>
+                  </Link>
+                </Button>
                 {isAdmin && (
                   <Button variant="outline" size="sm" asChild className="border-amber-500/30 text-amber-600 hover:bg-amber-50">
                     <Link to="/admin" className="flex items-center gap-2">
                       <Shield className="h-4 w-4" />
-                      Admin Panel
+                      <span className="hidden lg:inline">Admin Panel</span>
                     </Link>
                   </Button>
                 )}
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </Button>
                 <Button variant="sacred" size="sm" onClick={handleSignOut} className="flex items-center gap-2">
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  <span className="hidden lg:inline">Sign Out</span>
                 </Button>
               </>
             ) : (

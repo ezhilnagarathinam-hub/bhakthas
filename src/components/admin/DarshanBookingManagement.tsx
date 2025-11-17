@@ -134,7 +134,7 @@ const DarshanBookingManagement = () => {
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-border">
         <Table>
           <TableHeader>
             <TableRow>
