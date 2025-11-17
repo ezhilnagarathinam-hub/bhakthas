@@ -18,7 +18,9 @@ const Hero = () => {
             <div className="space-y-4">
               <h1 className="text-5xl md:text-7xl font-bold leading-tight font-cinzel">
                 <span className="block text-foreground">Welcome to</span>
-                <span className="block bg-gradient-sacred bg-clip-text text-transparent animate-divine-shine" style={{ backgroundSize: '200% 200%' }}>
+                <span className="block bg-gradient-sacred bg-clip-text text-transparent animate-divine-shine" style={{
+                backgroundSize: '200% 200%'
+              }}>
                   Bhakthas
                 </span>
               </h1>
@@ -42,7 +44,7 @@ const Hero = () => {
                 </Button>
               </Link>
               <Link to="/knowledge-hub">
-                <Button variant="mystic" size="lg" className="group">
+                <Button variant="mystic" size="lg" className="group mx-0 py-0 px-[15px]">
                   Knowledge Hub
                   <Star className="ml-2 h-5 w-5 group-hover:rotate-180 transition-transform animate-float" />
                 </Button>
