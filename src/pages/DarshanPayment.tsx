@@ -60,12 +60,20 @@ const DarshanPayment = () => {
   const handlePayment = async () => {
     setLoading(true);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Generate UPI payment link
+    const upiId = "temple@upi"; // Replace with actual temple UPI ID
+    const amount = booking?.amount_paid || 0;
+    const upiLink = `upi://pay?pa=${upiId}&pn=Temple Darshan&am=${amount}&cu=INR&tn=Darshan Booking ${booking?.invoice_number}`;
+    
+    // Open UPI payment
+    window.location.href = upiLink;
+    
+    // Simulate payment verification
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     toast({
-      title: "Payment Successful!",
-      description: "Your darshan booking payment has been processed",
+      title: "Payment Initiated!",
+      description: "Complete payment in your UPI app to confirm booking",
     });
 
     navigate(`/darshan/ticket/${bookingId}`);
@@ -141,15 +149,19 @@ const DarshanPayment = () => {
 
             <Card className="bg-muted/30 mt-6">
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center">
-                    <span className="text-2xl">💰</span>
+                <h4 className="font-semibold mb-3">Payment Methods</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-background rounded-lg border border-primary/20">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xl">📱</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold">UPI Payment</p>
+                      <p className="text-xs text-muted-foreground">Pay via Google Pay, PhonePe, Paytm</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold">Cash on Arrival</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Pay when you arrive at the temple
-                    </p>
+                  <div className="text-center text-sm text-muted-foreground p-2">
+                    You'll be redirected to your UPI app to complete payment
                   </div>
                 </div>
               </CardContent>
@@ -162,7 +174,7 @@ const DarshanPayment = () => {
               className="w-full mt-6"
               disabled={loading}
             >
-              {loading ? "Processing..." : "Confirm Booking"}
+              {loading ? "Opening UPI App..." : "Pay with UPI"}
             </Button>
           </CardContent>
         </Card>

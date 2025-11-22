@@ -60,19 +60,29 @@ const UserDashboard = () => {
 
       setBookings(bookingsData || []);
 
-      // Fetch all temple visits (verified)
-      const { data: visitsData } = await supabase
-        .from('temple_visits')
-        .select('points_earned, temple_id')
+      // Fetch Bhakthi points from new table
+      const { data: pointsData } = await supabase
+        .from('user_bhakthi_points')
+        .select('*')
         .eq('user_id', userId)
-        .eq('verified', true);
+        .maybeSingle();
 
-      const totalPoints = visitsData?.reduce((sum, visit) => sum + (visit.points_earned || 0), 0) || 0;
-      setBhakthiScore(totalPoints);
-
-      // Calculate credit points (1000 points = 25% discount)
-      const credits = Math.floor(totalPoints / 1000);
-      setCreditPoints(credits);
+      if (pointsData) {
+        setBhakthiScore(pointsData.total_points);
+        const credits = Math.floor(pointsData.total_points / 1000);
+        setCreditPoints(credits);
+      } else {
+        // Initialize if doesn't exist
+        await supabase
+          .from('user_bhakthi_points')
+          .insert({
+            user_id: userId,
+            total_points: 0,
+            temples_visited: 0,
+            total_visits: 0,
+            current_discount_percent: 0
+          });
+      }
 
       setLoading(false);
     } catch (error) {

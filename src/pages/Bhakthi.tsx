@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import TempleMap from "@/components/TempleMap";
 import { 
   MapPin, 
@@ -34,17 +35,23 @@ interface Temple {
 const Bhakthi = () => {
   const [temples, setTemples] = useState<Temple[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userScore, setUserScore] = useState(1200);
-  const [templesVisited] = useState(12);
+  const [userScore, setUserScore] = useState(0);
+  const [templesVisited, setTemplesVisited] = useState(0);
+  const [totalVisits, setTotalVisits] = useState(0);
+  const [currentDiscount, setCurrentDiscount] = useState(0);
   const [totalTemples, setTotalTemples] = useState(0);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [nearbyTemples, setNearbyTemples] = useState<(Temple & { distance: number })[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
     fetchTemples();
     getUserLocation();
-  }, []);
+    if (user) {
+      fetchUserPoints();
+    }
+  }, [user]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -123,12 +130,137 @@ const Bhakthi = () => {
     }
   };
 
+  const fetchUserPoints = async () => {
+    if (!user) return;
+    
+    try {
+      let { data, error } = await supabase
+        .from('user_bhakthi_points')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code === 'PGRST116') {
+        // Create initial record if doesn't exist
+        const { data: newData, error: insertError } = await supabase
+          .from('user_bhakthi_points')
+          .insert({
+            user_id: user.id,
+            total_points: 0,
+            temples_visited: 0,
+            total_visits: 0,
+            current_discount_percent: 0
+          })
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+        data = newData;
+      } else if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setUserScore(data.total_points);
+        setTemplesVisited(data.temples_visited);
+        setTotalVisits(data.total_visits);
+        setCurrentDiscount(data.current_discount_percent);
+      }
+    } catch (error) {
+      console.error('Error fetching user points:', error);
+    }
+  };
+
   const handleVisitTemple = async (templeId: string) => {
-    toast({
-      title: "Visit Recorded!",
-      description: "Your temple visit has been recorded. Points will be awarded after verification.",
-    });
-    setUserScore(prev => prev + 100);
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to record temple visits",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Check if already visited today
+      const { data: existingVisit } = await supabase
+        .from('temple_visits')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('temple_id', templeId)
+        .gte('visit_date', new Date().toISOString().split('T')[0])
+        .single();
+
+      if (existingVisit) {
+        toast({
+          title: "Already Visited",
+          description: "You've already recorded a visit to this temple today",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Record visit
+      const { error: visitError } = await supabase
+        .from('temple_visits')
+        .insert({
+          user_id: user.id,
+          temple_id: templeId,
+          points_earned: 100
+        });
+
+      if (visitError) throw visitError;
+
+      // Check if this is a new temple visit
+      const { data: previousVisits } = await supabase
+        .from('temple_visits')
+        .select('temple_id')
+        .eq('user_id', user.id)
+        .eq('temple_id', templeId);
+
+      const isNewTemple = previousVisits?.length === 1;
+
+      // Update points: 10 for visit + 100 if new temple
+      const visitPoints = 10;
+      const templeBonus = isNewTemple ? 100 : 0;
+      const totalNewPoints = visitPoints + templeBonus;
+
+      const newTotalPoints = userScore + totalNewPoints;
+      const newTotalVisits = totalVisits + 1;
+      const newTemplesVisited = isNewTemple ? templesVisited + 1 : templesVisited;
+      const newDiscount = Math.floor(newTotalPoints / 1000) * 25;
+
+      // Update user points
+      const { error: updateError } = await supabase
+        .from('user_bhakthi_points')
+        .update({
+          total_points: newTotalPoints,
+          temples_visited: newTemplesVisited,
+          total_visits: newTotalVisits,
+          current_discount_percent: newDiscount
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setUserScore(newTotalPoints);
+      setTotalVisits(newTotalVisits);
+      setTemplesVisited(newTemplesVisited);
+      setCurrentDiscount(newDiscount);
+
+      toast({
+        title: "Visit Recorded! 🎉",
+        description: `+${totalNewPoints} points! ${isNewTemple ? '(New temple bonus!)' : ''} ${newDiscount > currentDiscount ? `You've unlocked ${newDiscount}% discount!` : ''}`,
+      });
+    } catch (error) {
+      console.error('Error recording visit:', error);
+      toast({
+        title: "Error",
+        description: "Failed to record temple visit",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -177,7 +309,7 @@ const Bhakthi = () => {
           <Card className="bg-primary/10 border-primary/20">
             <CardContent className="p-6 text-center">
               <Gift className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary">25% OFF</div>
+              <div className="text-2xl font-bold text-primary">{currentDiscount}% OFF</div>
               <div className="text-sm text-muted-foreground">Earned Discount</div>
             </CardContent>
           </Card>

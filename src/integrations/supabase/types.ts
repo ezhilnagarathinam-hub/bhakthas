@@ -201,6 +201,45 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          discount_percent: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_percent: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       temple_contributions: {
         Row: {
           address: string | null
@@ -344,6 +383,39 @@ export type Database = {
           rating?: number | null
           state?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_bhakthi_points: {
+        Row: {
+          created_at: string | null
+          current_discount_percent: number | null
+          id: string
+          temples_visited: number | null
+          total_points: number | null
+          total_visits: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_discount_percent?: number | null
+          id?: string
+          temples_visited?: number | null
+          total_points?: number | null
+          total_visits?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_discount_percent?: number | null
+          id?: string
+          temples_visited?: number | null
+          total_points?: number | null
+          total_visits?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
