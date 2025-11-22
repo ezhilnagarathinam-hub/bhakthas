@@ -1,12 +1,110 @@
+import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
+  const [bhakthiDiscount, setBhakthiDiscount] = useState(0);
+  
+  useEffect(() => {
+    if (user) {
+      fetchBhakthiDiscount();
+    }
+  }, [user]);
+
+  const fetchBhakthiDiscount = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('user_bhakthi_points')
+        .select('current_discount_percent')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setBhakthiDiscount(data.current_discount_percent);
+      }
+    } catch (error) {
+      console.error('Error fetching discount:', error);
+    }
+  };
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Invalid Code",
+          description: "This promo code is not valid or has expired",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if code has reached max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        toast({
+          title: "Code Expired",
+          description: "This promo code has reached its maximum number of uses",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAppliedPromo({ code: data.code, discount: data.discount_percent });
+      toast({
+        title: "Promo Applied!",
+        description: `${data.discount_percent}% discount has been applied`,
+      });
+    } catch (error) {
+      console.error('Error applying promo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to apply promo code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const calculateFinalPrice = () => {
+    let price = totalPrice;
+    
+    // Apply promo code discount
+    if (appliedPromo) {
+      price = price * (1 - appliedPromo.discount / 100);
+    }
+    
+    // Apply Bhakthi points discount (these don't stack, use the best)
+    if (bhakthiDiscount > 0 && !appliedPromo) {
+      price = price * (1 - bhakthiDiscount / 100);
+    }
+    
+    return Math.round(price);
+  };
+
+  const totalDiscount = appliedPromo ? appliedPromo.discount : bhakthiDiscount;
+  const finalPrice = calculateFinalPrice();
 
   if (items.length === 0) {
     return (
@@ -101,11 +199,47 @@ const Cart = () => {
             <Card className="sticky top-4">
               <CardContent className="p-6 space-y-4">
                 <h3 className="text-xl font-bold">Order Summary</h3>
+                
+                {/* Promo Code Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Promo Code
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter code"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      disabled={!!appliedPromo}
+                    />
+                    <Button
+                      onClick={appliedPromo ? () => setAppliedPromo(null) : applyPromoCode}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {appliedPromo ? "Remove" : "Apply"}
+                    </Button>
+                  </div>
+                  {appliedPromo && (
+                    <p className="text-sm text-accent">✓ {appliedPromo.code} applied ({appliedPromo.discount}% off)</p>
+                  )}
+                  {bhakthiDiscount > 0 && !appliedPromo && (
+                    <p className="text-sm text-accent">✓ Bhakthi Discount: {bhakthiDiscount}% off</p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="font-semibold">₹{totalPrice}</span>
                   </div>
+                  {totalDiscount > 0 && (
+                    <div className="flex justify-between text-accent">
+                      <span className="text-muted-foreground">Discount ({totalDiscount}%)</span>
+                      <span className="font-semibold">-₹{totalPrice - finalPrice}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
                     <span className="font-semibold text-accent">FREE</span>
@@ -113,7 +247,7 @@ const Cart = () => {
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between text-lg">
                       <span className="font-bold">Total</span>
-                      <span className="font-bold text-primary">₹{totalPrice}</span>
+                      <span className="font-bold text-primary">₹{finalPrice}</span>
                     </div>
                   </div>
                 </div>
