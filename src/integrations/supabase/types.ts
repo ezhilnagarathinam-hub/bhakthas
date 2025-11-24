@@ -82,6 +82,77 @@ export type Database = {
           },
         ]
       }
+      darshan_packages: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          package_name: string
+          package_type: string
+          price: number
+          temple_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          package_name: string
+          package_type: string
+          price?: number
+          temple_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          package_name?: string
+          package_type?: string
+          price?: number
+          temple_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "darshan_packages_temple_id_fkey"
+            columns: ["temple_id"]
+            isOneToOne: false
+            referencedRelation: "temples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mantras: {
         Row: {
           audio_url: string | null
@@ -335,6 +406,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          darshan_enabled: boolean | null
           deity: string | null
           description: string | null
           id: string
@@ -353,6 +425,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          darshan_enabled?: boolean | null
           deity?: string | null
           description?: string | null
           id?: string
@@ -371,6 +444,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          darshan_enabled?: boolean | null
           deity?: string | null
           description?: string | null
           id?: string

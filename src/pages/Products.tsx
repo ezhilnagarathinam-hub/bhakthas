@@ -1,90 +1,63 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, ShoppingCart, Filter, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Star, Search, Heart, Share2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
-import poojaImage from "@/assets/pooja-products.jpg";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import { shareItem } from "@/utils/shareUtils";
+import { supabase } from "@/integrations/supabase/client";
+import poojaProducts from "@/assets/pooja-products.jpg";
 
 const Products = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  
-  const products = [
-    {
-      id: 1,
-      name: "Sacred Brass Diya Set",
-      price: 299,
-      originalPrice: 399,
-      discount: "25% OFF",
-      rating: 4.8,
-      reviews: 124,
-      image: poojaImage,
-      category: "Lamps & Diyas"
-    },
-    {
-      id: 2,
-      name: "Premium Incense Collection",
-      price: 199,
-      originalPrice: 249,
-      discount: "20% OFF",
-      rating: 4.9,
-      reviews: 89,
-      image: poojaImage,
-      category: "Incense"
-    },
-    {
-      id: 3,
-      name: "Ganesh Idol - Pure Brass",
-      price: 1299,
-      originalPrice: 1599,
-      discount: "19% OFF",
-      rating: 4.7,
-      reviews: 56,
-      image: poojaImage,
-      category: "Idols"
-    },
-    {
-      id: 4,
-      name: "Rudraksha Mala - Original",
-      price: 899,
-      originalPrice: 1199,
-      discount: "25% OFF",
-      rating: 4.9,
-      reviews: 203,
-      image: poojaImage,
-      category: "Malas"
-    },
-    {
-      id: 5,
-      name: "Copper Kalash Set",
-      price: 699,
-      originalPrice: 899,
-      discount: "22% OFF",
-      rating: 4.6,
-      reviews: 78,
-      image: poojaImage,
-      category: "Vessels"
-    },
-    {
-      id: 6,
-      name: "Sacred Thread - Cotton",
-      price: 99,
-      originalPrice: 149,
-      discount: "34% OFF",
-      rating: 4.8,
-      reviews: 145,
-      image: poojaImage,
-      category: "Accessories"
-    }
-  ];
+  const { user } = useAuth();
+  const { toggleFavorite, isFavorite } = useFavorites('product', user?.id);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const categories = ["All", "Lamps & Diyas", "Incense", "Idols", "Malas", "Vessels", "Accessories"];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name');
+    
+    if (!error && data) {
+      setProducts(data);
+    }
+    setLoading(false);
+  };
+
+  const categories = ["All", ...new Set(products.map(p => p.category).filter(Boolean))];
+
+  const filteredProducts = products
+    .filter(product => 
+      (selectedCategory === "All" || product.category === selectedCategory) &&
+      (product.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       product.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      const aFav = isFavorite(a.id);
+      const bFav = isFavorite(b.id);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+      return 0;
+    });
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center space-y-4">
@@ -94,121 +67,117 @@ const Products = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover authentic sacred items for your spiritual practices
             </p>
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 max-w-md mx-auto">
-              <p className="text-primary font-semibold">
-                🎯 Earn 1000 Bhakthi points for 25% discount!
-              </p>
-            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input 
-                placeholder="Search sacred products..." 
-                className="pl-10"
-              />
-            </div>
+        <div className="mb-8 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input 
+              placeholder="Search products..." 
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 flex-wrap">
             {categories.map((category) => (
-              <Button
-                key={category}
-                variant={category === "All" ? "default" : "outline"}
+              <Button 
+                key={category} 
+                variant={selectedCategory === category ? "default" : "outline"} 
                 size="sm"
+                onClick={() => setSelectedCategory(category)}
               >
                 {category}
               </Button>
             ))}
           </div>
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <Card 
-              key={product.id} 
-              className="group hover:shadow-sacred transition-divine overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/products/${product.id}`)}
-            >
-              <CardHeader className="p-0">
-                <div className="relative overflow-hidden">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="h-48 w-full" />
+                <CardContent className="p-4 space-y-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-8 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <Card
+                key={product.id}
+                className="group transition-all hover:shadow-lg"
+              >
+                <div className="relative overflow-hidden aspect-square cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                   <img
-                    src={product.image}
+                    src={product.image_url || poojaProducts}
                     alt={product.name}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-divine"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
                   />
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute top-2 left-2 bg-primary text-primary-foreground"
-                  >
-                    {product.discount}
-                  </Badge>
-                  <Badge 
-                    variant="outline" 
-                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm"
-                  >
-                    {product.category}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <CardTitle className="text-lg mb-2 group-hover:text-primary transition-sacred">
-                  {product.name}
-                </CardTitle>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-accent text-accent" />
-                    <span className="text-sm font-medium ml-1">{product.rating}</span>
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="rounded-full shadow-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(product.id);
+                      }}
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorite(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="rounded-full shadow-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        shareItem(product.name, product.description || '', window.location.href + '/' + product.id);
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    ({product.reviews} reviews)
-                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-                  <span className="text-lg text-muted-foreground line-through">
-                    ₹{product.originalPrice}
-                  </span>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button 
-                  variant="sacred" 
-                  className="w-full group"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart({
-                      id: product.id,
-                      name: product.name,
-                      price: product.price,
-                      image: product.image,
-                    });
-                  }}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
-                  Add to Cart
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart({ 
+                          id: product.id, 
+                          name: product.name, 
+                          price: product.price, 
+                          image: product.image_url 
+                        });
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
-            Load More Products
-          </Button>
-        </div>
+        {!loading && filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No products found</p>
+          </div>
+        )}
       </div>
     </div>
   );
