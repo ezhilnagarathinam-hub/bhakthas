@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, BookOpen, Star, ChevronRight, Search } from "lucide-react";
+import { MapPin, BookOpen, Star, ChevronRight, Search, Heart, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import { shareItem } from "@/utils/shareUtils";
 
 interface Temple {
   id: string;
@@ -29,9 +32,10 @@ const KnowledgeHub = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
-  const [deityFilter, setDeityFilter] = useState("all");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toggleFavorite, isFavorite } = useFavorites('temple', user?.id);
 
   useEffect(() => {
     fetchTemples();
@@ -39,12 +43,11 @@ const KnowledgeHub = () => {
 
   useEffect(() => {
     filterTemples();
-  }, [temples, searchTerm, stateFilter, cityFilter, deityFilter]);
+  }, [temples, searchTerm, stateFilter, cityFilter]);
 
   const fetchTemples = async () => {
     try {
       setLoading(true);
-      // Fetch both regular temples and approved contributions
       const [templesData, contributionsData] = await Promise.all([
         supabase.from('temples').select('*').order('name'),
         supabase
@@ -59,7 +62,6 @@ const KnowledgeHub = () => {
         throw templesData.error;
       }
       
-      // Convert contributions to temple format
       const contributionTemples = (contributionsData.data || []).map(contrib => ({
         id: contrib.id,
         name: contrib.temple_name,
@@ -105,6 +107,14 @@ const KnowledgeHub = () => {
       filtered = filtered.filter(temple => temple.city === cityFilter);
     }
 
+    filtered = filtered.sort((a, b) => {
+      const aFav = isFavorite(a.id);
+      const bFav = isFavorite(b.id);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+      return 0;
+    });
+
     setFilteredTemples(filtered);
   };
 
@@ -117,7 +127,6 @@ const KnowledgeHub = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center space-y-4">
@@ -143,7 +152,6 @@ const KnowledgeHub = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Search and Filters */}
             <div className="grid md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <div className="relative">
@@ -191,13 +199,37 @@ const KnowledgeHub = () => {
                 {filteredTemples.map((temple) => (
                   <Card 
                     key={temple.id} 
-                    className="group hover:shadow-divine transition-all duration-300 cursor-pointer border-primary/10 hover:border-primary/30 bg-gradient-enlighten"
+                    className="group hover:shadow-divine transition-all duration-300 cursor-pointer border-primary/10 hover:border-primary/30 bg-gradient-enlighten relative"
                     onClick={() => handleTempleClick(temple.id)}
                   >
+                    <div className="absolute top-3 right-3 flex gap-2 z-10">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="rounded-full shadow-lg h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(temple.id);
+                        }}
+                      >
+                        <Heart className={`h-3 w-3 ${isFavorite(temple.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="rounded-full shadow-lg h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          shareItem(temple.name, temple.description || '', window.location.origin + '/knowledge-hub/' + temple.id);
+                        }}
+                      >
+                        <Share2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">
+                          <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors pr-16">
                             {temple.name}
                           </h3>
                           {temple.city && temple.state && (

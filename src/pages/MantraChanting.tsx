@@ -6,8 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen } from "lucide-react";
+import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen, Heart, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import { shareItem } from "@/utils/shareUtils";
 import divineOm from "@/assets/divine-om.jpg";
 
 interface Achievement {
@@ -37,6 +40,8 @@ const MantraChanting = () => {
   const [mantraDialogOpen, setMantraDialogOpen] = useState(false);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { toggleFavorite, isFavorite } = useFavorites('mantra', user?.id);
 
   useEffect(() => {
     fetchMantras();
@@ -232,15 +237,47 @@ const MantraChanting = () => {
             </DialogHeader>
             <ScrollArea className="h-[60vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
-                {mantras.map((mantra) => (
-                  <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
-                    <CardContent className="p-4">
-                      <h3 className="font-bold text-lg mb-1">{mantra.title}</h3>
-                      {mantra.deity && <Badge variant="secondary" className="mb-2">{mantra.deity}</Badge>}
-                      <p className="text-sm text-muted-foreground line-clamp-2">{mantra.translation || mantra.sanskrit_text}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                {mantras
+                  .sort((a, b) => {
+                    const aFav = isFavorite(a.id);
+                    const bFav = isFavorite(b.id);
+                    if (aFav && !bFav) return -1;
+                    if (!aFav && bFav) return 1;
+                    return 0;
+                  })
+                  .map((mantra) => (
+                    <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine relative" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
+                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(mantra.id);
+                          }}
+                        >
+                          <Heart className={`h-3 w-3 ${isFavorite(mantra.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareItem(mantra.title, mantra.translation || mantra.sanskrit_text, window.location.href);
+                          }}
+                        >
+                          <Share2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-lg mb-1 pr-16">{mantra.title}</h3>
+                        {mantra.deity && <Badge variant="secondary" className="mb-2">{mantra.deity}</Badge>}
+                        <p className="text-sm text-muted-foreground line-clamp-2">{mantra.translation || mantra.sanskrit_text}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
               </div>
             </ScrollArea>
           </DialogContent>
