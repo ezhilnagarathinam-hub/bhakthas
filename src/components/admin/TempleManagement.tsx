@@ -8,9 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, MapPin, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { useGeocoding } from "@/hooks/useGeocoding";
 
 const TempleManagement = () => {
   const [temples, setTemples] = useState<any[]>([]);
@@ -18,7 +20,10 @@ const TempleManagement = () => {
   const [editingTemple, setEditingTemple] = useState<any>(null);
   const [darshanPackages, setDarshanPackages] = useState<any[]>([]);
   const [showDarshanConfig, setShowDarshanConfig] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { uploadFile, uploading } = useFileUpload('temple-images');
+  const { geocodeAddress, geocoding } = useGeocoding();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -75,8 +80,21 @@ const TempleManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    let imageUrl = formData.image_url;
+
+    // Upload new image if selected
+    if (imageFile) {
+      const uploadedUrl = await uploadFile(imageFile);
+      if (!uploadedUrl) {
+        toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+        return;
+      }
+      imageUrl = uploadedUrl;
+    }
+
     const templeData = {
       ...formData,
+      image_url: imageUrl,
       latitude: parseFloat(formData.latitude),
       longitude: parseFloat(formData.longitude),
       rating: parseFloat(formData.rating),
@@ -205,6 +223,24 @@ const TempleManagement = () => {
     }
   };
 
+  const handleGeocodeAddress = async () => {
+    const fullAddress = `${formData.address}, ${formData.city}, ${formData.state}, ${formData.country}`;
+    if (!fullAddress.trim()) {
+      toast({ title: "Error", description: "Please enter address details first", variant: "destructive" });
+      return;
+    }
+
+    const coordinates = await geocodeAddress(fullAddress);
+    if (coordinates) {
+      setFormData({
+        ...formData,
+        latitude: coordinates.latitude.toString(),
+        longitude: coordinates.longitude.toString()
+      });
+      toast({ title: "Success", description: "Address geocoded successfully" });
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -221,6 +257,7 @@ const TempleManagement = () => {
       points: "100",
       darshan_enabled: false
     });
+    setImageFile(null);
     setEditingTemple(null);
     setIsDialogOpen(false);
     setShowDarshanConfig(false);
@@ -291,11 +328,34 @@ const TempleManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      placeholder="Street address"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGeocodeAddress}
+                      disabled={geocoding}
+                      className="w-full"
+                    >
+                      {geocoding ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Getting Location...
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="w-4 h-4 mr-2" />
+                          Auto-fill Coordinates
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -307,6 +367,8 @@ const TempleManagement = () => {
                       value={formData.latitude}
                       onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                       required
+                      readOnly
+                      className="bg-muted"
                     />
                   </div>
                   <div>
@@ -318,16 +380,26 @@ const TempleManagement = () => {
                       value={formData.longitude}
                       onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                       required
+                      readOnly
+                      className="bg-muted"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  />
+                  <Label htmlFor="image">Temple Image</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                      className="flex-1"
+                    />
+                    {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  </div>
+                  {formData.image_url && !imageFile && (
+                    <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

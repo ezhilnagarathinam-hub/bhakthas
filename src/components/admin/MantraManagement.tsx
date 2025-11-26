@@ -7,14 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 const MantraManagement = () => {
   const [mantras, setMantras] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMantra, setEditingMantra] = useState<any>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { uploadFile, uploading } = useFileUpload('mantra-audio');
 
   const [formData, setFormData] = useState({
     title: "",
@@ -47,10 +50,27 @@ const MantraManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    let audioUrl = formData.audio_url;
+
+    // Upload new audio if selected
+    if (audioFile) {
+      const uploadedUrl = await uploadFile(audioFile);
+      if (!uploadedUrl) {
+        toast({ title: "Error", description: "Failed to upload audio", variant: "destructive" });
+        return;
+      }
+      audioUrl = uploadedUrl;
+    }
+
+    const mantraData = {
+      ...formData,
+      audio_url: audioUrl
+    };
+
     if (editingMantra) {
       const { error } = await supabase
         .from('mantras')
-        .update(formData)
+        .update(mantraData)
         .eq('id', editingMantra.id);
 
       if (error) {
@@ -63,7 +83,7 @@ const MantraManagement = () => {
     } else {
       const { error } = await supabase
         .from('mantras')
-        .insert([formData]);
+        .insert([mantraData]);
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -117,6 +137,7 @@ const MantraManagement = () => {
       category: "",
       audio_url: ""
     });
+    setAudioFile(null);
     setEditingMantra(null);
     setIsDialogOpen(false);
   };
@@ -199,16 +220,31 @@ const MantraManagement = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="audio_url">Audio URL</Label>
-                <Input
-                  id="audio_url"
-                  value={formData.audio_url}
-                  onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
-                />
+                <Label htmlFor="audio">Audio File</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="audio"
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                  {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                </div>
+                {formData.audio_url && !audioFile && (
+                  <audio controls src={formData.audio_url} className="mt-2 w-full" />
+                )}
               </div>
               <div className="flex gap-2">
-                <Button type="submit" variant="sacred">
-                  {editingMantra ? 'Update' : 'Create'} Mantra
+                <Button type="submit" variant="sacred" disabled={uploading}>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>{editingMantra ? 'Update' : 'Create'} Mantra</>
+                  )}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancel
