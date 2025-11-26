@@ -7,14 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { uploadFile, uploading } = useFileUpload('product-images');
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,8 +48,21 @@ const ProductManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    let imageUrl = formData.image_url;
+
+    // Upload new image if selected
+    if (imageFile) {
+      const uploadedUrl = await uploadFile(imageFile);
+      if (!uploadedUrl) {
+        toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+        return;
+      }
+      imageUrl = uploadedUrl;
+    }
+
     const productData = {
       ...formData,
+      image_url: imageUrl,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock)
     };
@@ -117,6 +133,7 @@ const ProductManagement = () => {
       stock: "",
       image_url: ""
     });
+    setImageFile(null);
     setEditingProduct(null);
     setIsDialogOpen(false);
   };
@@ -186,16 +203,31 @@ const ProductManagement = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                />
+                <Label htmlFor="image">Product Image</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                  {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                </div>
+                {formData.image_url && !imageFile && (
+                  <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
+                )}
               </div>
               <div className="flex gap-2">
-                <Button type="submit" variant="sacred">
-                  {editingProduct ? 'Update' : 'Create'} Product
+                <Button type="submit" variant="sacred" disabled={uploading}>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>{editingProduct ? 'Update' : 'Create'} Product</>
+                  )}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancel
