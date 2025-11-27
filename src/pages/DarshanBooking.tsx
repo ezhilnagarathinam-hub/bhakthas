@@ -231,7 +231,7 @@ const DarshanBooking = () => {
           customer_name: validation.data.name,
           customer_email: validation.data.email,
           customer_phone: validation.data.phone,
-          status: isFree ? "confirmed" : "awaiting",
+          status: "awaiting", // Always awaiting for admin approval
           number_of_tickets: numberOfTickets,
           bhaktha_details: bhakthas.map(b => ({
             name: b.name,
@@ -247,16 +247,11 @@ const DarshanBooking = () => {
 
       toast({
         title: "Booking created!",
-        description: isFree ? "Your free darshan has been confirmed" : "Proceed to payment",
+        description: "Your booking is awaiting admin confirmation and payment verification",
       });
 
-      // If free darshan, go directly to ticket with confirmed status
-      if (isFree) {
-        navigate(`/darshan/ticket/${booking.id}`);
-      } else {
-        // For paid packages, go to payment page
-        navigate(`/darshan/payment/${booking.id}`);
-      }
+      // Always go to payment page (even for free darshan, admin will verify)
+      navigate(`/darshan/payment/${booking.id}`);
     } catch (error) {
       toast({
         title: "Booking failed",
@@ -537,8 +532,11 @@ const DarshanBooking = () => {
             className="w-full"
             disabled={loading || !selectedPackageId || !date || packages.length === 0}
           >
-            {loading ? "Processing..." : isFree ? "Confirm Free Darshan" : `Proceed to Pay ₹${totalPrice}`}
+            {loading ? "Processing..." : `Proceed to ${isFree ? 'Submit' : `Pay ₹${totalPrice}`}`}
           </Button>
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            All bookings require admin verification before confirmation
+          </p>
         </form>
       </div>
     </div>

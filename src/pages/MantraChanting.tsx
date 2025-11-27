@@ -20,6 +20,18 @@ interface Achievement {
   date: string;
 }
 
+interface Mantra {
+  id: string;
+  title: string;
+  sanskrit_text: string;
+  transliteration: string | null;
+  translation: string | null;
+  benefits: string | null;
+  deity: string | null;
+  category: string | null;
+  audio_url: string | null;
+}
+
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
@@ -35,9 +47,12 @@ const MantraChanting = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [mantras, setMantras] = useState<any[]>([]);
-  const [selectedMantra, setSelectedMantra] = useState<any>(null);
+  const [mantras, setMantras] = useState<Mantra[]>([]);
+  const [selectedMantra, setSelectedMantra] = useState<Mantra | null>(null);
   const [mantraDialogOpen, setMantraDialogOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioRepeatCount, setAudioRepeatCount] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -46,6 +61,72 @@ const MantraChanting = () => {
   useEffect(() => {
     fetchMantras();
   }, []);
+
+  // Audio playback tracking
+  useEffect(() => {
+    if (selectedMantra?.audio_url && audioRef.current) {
+      const audio = audioRef.current;
+      
+      const handleEnded = () => {
+        if (audioRepeatCount < target - 1) {
+          // Increment counter and replay
+          setAudioRepeatCount(prev => prev + 1);
+          setCount(prev => {
+            const newCount = prev + 1;
+            if (newCount === target) {
+              handleCompletion();
+              setIsPlaying(false);
+            } else {
+              // Replay audio
+              audio.currentTime = 0;
+              audio.play().catch(err => console.error('Audio play error:', err));
+            }
+            return newCount;
+          });
+        } else {
+          // Completed all repetitions
+          setCount(target);
+          handleCompletion();
+          setIsPlaying(false);
+        }
+      };
+
+      audio.addEventListener('ended', handleEnded);
+      
+      return () => {
+        audio.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, [selectedMantra, audioRepeatCount, target, count]);
+
+  const toggleAudioPlayback = () => {
+    if (!selectedMantra?.audio_url) {
+      toast({
+        title: "No Audio Available",
+        description: "This mantra doesn't have audio attached",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(err => {
+            console.error('Audio play error:', err);
+            toast({
+              title: "Audio Error",
+              description: "Failed to play audio. Please try again.",
+              variant: "destructive"
+            });
+          });
+      }
+    }
+  };
 
   const fetchMantras = async () => {
     const { data, error } = await supabase
@@ -181,11 +262,17 @@ const MantraChanting = () => {
 
   const resetCounter = () => {
     setCount(0);
+    setAudioRepeatCount(0);
     setIsCompleted(false);
     setShowConfetti(false);
     setIsListening(false);
+    setIsPlaying(false);
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
   };
 
@@ -301,15 +388,51 @@ const MantraChanting = () => {
                   <Card className="shadow-divine border-primary/20">
                     <CardContent className="p-6">
                       <h4 className="font-semibold text-primary mb-4 text-center">Chanting Counter</h4>
+                      
+                      {/* Audio Player */}
+                      {selectedMantra.audio_url && (
+                        <div className="mb-4 p-4 bg-muted/30 rounded-lg">
+                          <audio 
+                            ref={audioRef}
+                            src={selectedMantra.audio_url}
+                            preload="auto"
+                          />
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-muted-foreground">Audio Mantra</span>
+                            <Badge variant="secondary">
+                              {audioRepeatCount + 1} / {target}
+                            </Badge>
+                          </div>
+                          <Button 
+                            onClick={toggleAudioPlayback}
+                            variant={isPlaying ? "destructive" : "default"}
+                            className="w-full"
+                            disabled={isCompleted}
+                          >
+                            {isPlaying ? (
+                              <><Pause className="h-4 w-4 mr-2" />Pause Audio</>
+                            ) : (
+                              <><Play className="h-4 w-4 mr-2" />Play Audio Mantra</>
+                            )}
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center mt-2">
+                            Audio will automatically repeat {target} times
+                          </p>
+                        </div>
+                      )}
+                      
                       <div className="text-center space-y-4">
                         <div className={`text-6xl font-bold ${isCompleted ? 'text-primary' : 'bg-gradient-sacred bg-clip-text text-transparent'}`}>{count}</div>
                         <div className="text-xl font-semibold text-muted-foreground">/ {target}</div>
                         {isCompleted && <Badge className="text-lg px-4 py-2 bg-gradient-sacred text-white">🎉 Completed! 🎉</Badge>}
                         <div className="flex justify-center gap-3 flex-wrap pt-4">
-                          <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="lg" disabled={isCompleted}>{isListening ? <><MicOff className="h-5 w-5 mr-2" />Stop</> : <><Mic className="h-5 w-5 mr-2" />Start</>}</Button>
-                          <Button onClick={manualIncrement} variant="divine" size="lg" disabled={isCompleted || count >= target}>+1 Count</Button>
+                          <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="lg" disabled={isCompleted || isPlaying}>{isListening ? <><MicOff className="h-5 w-5 mr-2" />Stop</> : <><Mic className="h-5 w-5 mr-2" />Voice Chant</>}</Button>
+                          <Button onClick={manualIncrement} variant="divine" size="lg" disabled={isCompleted || count >= target || isPlaying}>+1 Manual</Button>
                           <Button onClick={resetCounter} variant="outline" size="lg"><RotateCcw className="h-5 w-5 mr-2" />Reset</Button>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          Use Voice Chant to count your spoken mantras, or Manual counter for mala beads
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -339,8 +462,13 @@ const MantraChanting = () => {
               <div className="text-center space-y-6">
                 <div><div className={`text-9xl font-bold ${isCompleted ? 'text-white drop-shadow-glow' : 'bg-gradient-sacred bg-clip-text text-transparent'}`}>{count}</div><div className={`text-3xl font-semibold mt-4 ${isCompleted ? 'text-white/90' : 'text-muted-foreground'}`}>/ {target}</div></div>
                 <div className="flex justify-center gap-4 flex-wrap">
-                  <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="lg" disabled={isCompleted}>{isListening ? <><MicOff className="h-5 w-5 mr-2" />Stop Chant</> : <><Mic className="h-5 w-5 mr-2" />Start Chant</>}</Button>
-                  <Button onClick={manualIncrement} variant="divine" size="lg" disabled={isCompleted || count >= target}>+1 Count</Button>
+                  <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="lg" disabled={isCompleted || isPlaying}>{isListening ? <><MicOff className="h-5 w-5 mr-2" />Stop Voice</> : <><Mic className="h-5 w-5 mr-2" />Voice Chant</>}</Button>
+                  {selectedMantra?.audio_url && (
+                    <Button onClick={toggleAudioPlayback} variant={isPlaying ? "destructive" : "default"} size="lg" disabled={isCompleted || isListening}>
+                      {isPlaying ? <><Pause className="h-4 w-4 mr-2" />Pause Audio</> : <><Play className="h-4 w-4 mr-2" />Play Audio</>}
+                    </Button>
+                  )}
+                  <Button onClick={manualIncrement} variant="divine" size="lg" disabled={isCompleted || count >= target || isPlaying || isListening}>+1 Manual</Button>
                   <Button onClick={resetCounter} variant="outline" size="lg"><RotateCcw className="h-5 w-5 mr-2" />Reset</Button>
                 </div>
               </div>

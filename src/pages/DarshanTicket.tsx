@@ -215,12 +215,11 @@ const DarshanTicket = () => {
               </Card>
             )}
 
-            {booking.status === "awaiting" && !isPastDarshan && (
-              <Card className="bg-muted/30">
+            {booking.status === "awaiting" && (
+              <Card className="bg-yellow-500/10 border-yellow-500/20">
                 <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground">
-                    📋 Your booking is awaiting admin confirmation. You will be notified once confirmed.
-                    If the booking remains unconfirmed past your darshan date, your payment will be automatically refunded.
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    ⏳ Your booking is awaiting admin verification. You will be notified once the admin confirms your booking and payment.
                   </p>
                 </CardContent>
               </Card>

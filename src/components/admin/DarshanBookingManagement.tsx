@@ -32,6 +32,8 @@ interface Booking {
   invoice_number: string;
   status: string;
   created_at: string;
+  number_of_tickets: number;
+  bhaktha_details: any;
   temples: {
     name: string;
   };
@@ -77,7 +79,7 @@ const DarshanBookingManagement = () => {
     try {
       const { error } = await supabase
         .from("darshan_bookings")
-        .update({ status: newStatus })
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq("id", bookingId);
 
       if (error) throw error;
@@ -88,9 +90,18 @@ const DarshanBookingManagement = () => {
         )
       );
 
+      let statusMessage = "Booking status updated";
+      if (newStatus === "confirmed") {
+        statusMessage = "✅ Booking confirmed! Customer will be notified.";
+      } else if (newStatus === "cancelled") {
+        statusMessage = "❌ Booking cancelled. Consider refunding payment if made.";
+      } else if (newStatus === "refunded") {
+        statusMessage = "💰 Booking refunded. Please process refund separately.";
+      }
+
       toast({
-        title: "Status updated",
-        description: `Booking status changed to ${newStatus}`,
+        title: "Status Updated",
+        description: statusMessage,
       });
     } catch (error) {
       toast({
@@ -127,6 +138,19 @@ const DarshanBookingManagement = () => {
 
   return (
     <div className="space-y-4">
+      <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
+        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⚠️ Admin Verification Required</h3>
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+          All bookings require manual verification before confirmation:
+        </p>
+        <ul className="text-sm text-yellow-700 dark:text-yellow-300 list-disc list-inside mt-2 space-y-1">
+          <li>Verify customer details and contact information</li>
+          <li>Confirm payment received (check UPI transaction)</li>
+          <li>Review bhaktha details for accuracy</li>
+          <li>Only mark as "Confirmed" after all verification is complete</li>
+        </ul>
+      </div>
+
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Darshan Bookings</h2>
         <Button onClick={fetchBookings} variant="outline">
@@ -141,6 +165,7 @@ const DarshanBookingManagement = () => {
               <TableHead>Invoice</TableHead>
               <TableHead>Temple</TableHead>
               <TableHead>Customer</TableHead>
+              <TableHead>Tickets</TableHead>
               <TableHead>Darshan Type</TableHead>
               <TableHead>Date & Time</TableHead>
               <TableHead>Amount</TableHead>
@@ -161,6 +186,9 @@ const DarshanBookingManagement = () => {
                     <p className="text-xs text-muted-foreground">{booking.customer_email}</p>
                     <p className="text-xs text-muted-foreground">{booking.customer_phone}</p>
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{booking.number_of_tickets || 1}</Badge>
                 </TableCell>
                 <TableCell>{getDarshanLabel(booking.darshan_type)}</TableCell>
                 <TableCell>
