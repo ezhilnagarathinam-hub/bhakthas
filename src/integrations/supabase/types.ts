@@ -419,6 +419,7 @@ export type Database = {
           rating: number | null
           state: string | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           address?: string | null
@@ -438,6 +439,7 @@ export type Database = {
           rating?: number | null
           state?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           address?: string | null
@@ -457,6 +459,7 @@ export type Database = {
           rating?: number | null
           state?: string | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }

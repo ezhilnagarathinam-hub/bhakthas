@@ -1,12 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Star, ShoppingCart, ArrowLeft, Package, Truck, ShieldCheck } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import poojaImage from "@/assets/pooja-products.jpg";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string | null;
+  description: string | null;
+  image_url: string | null;
+  stock: number | null;
+}
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -14,126 +26,65 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock product data - in real app, fetch from Supabase
-  const products = [
-    {
-      id: 1,
-      name: "Sacred Brass Diya Set",
-      price: 299,
-      originalPrice: 399,
-      discount: "25% OFF",
-      rating: 4.8,
-      reviews: 124,
-      image: poojaImage,
-      category: "Lamps & Diyas",
-      description: "Premium quality brass diya set perfect for daily puja and special occasions. Handcrafted by skilled artisans with intricate designs.",
-      features: [
-        "Made from pure brass",
-        "Set of 5 diyas",
-        "Traditional handcrafted design",
-        "Easy to clean and maintain",
-        "Perfect for festivals and daily worship"
-      ]
-    },
-    {
-      id: 2,
-      name: "Premium Incense Collection",
-      price: 199,
-      originalPrice: 249,
-      discount: "20% OFF",
-      rating: 4.9,
-      reviews: 89,
-      image: poojaImage,
-      category: "Incense",
-      description: "A divine collection of premium incense sticks with authentic fragrances. Made from natural ingredients for a pure spiritual experience.",
-      features: [
-        "100% natural ingredients",
-        "Pack of 12 boxes",
-        "Long-lasting fragrance",
-        "Traditional Indian scents",
-        "Ideal for meditation and prayer"
-      ]
-    },
-    {
-      id: 3,
-      name: "Ganesh Idol - Pure Brass",
-      price: 1299,
-      originalPrice: 1599,
-      discount: "19% OFF",
-      rating: 4.7,
-      reviews: 56,
-      image: poojaImage,
-      category: "Idols",
-      description: "Beautiful Lord Ganesh idol crafted from pure brass. Perfect for home temple or as a spiritual gift.",
-      features: [
-        "Pure brass construction",
-        "Height: 6 inches",
-        "Detailed craftsmanship",
-        "Comes with blessing instructions",
-        "Perfect for home and office"
-      ]
-    },
-    {
-      id: 4,
-      name: "Rudraksha Mala - Original",
-      price: 899,
-      originalPrice: 1199,
-      discount: "25% OFF",
-      rating: 4.9,
-      reviews: 203,
-      image: poojaImage,
-      category: "Malas",
-      description: "Authentic Rudraksha mala with 108 beads. Sourced directly from Nepal, perfect for meditation and chanting.",
-      features: [
-        "108 genuine Rudraksha beads",
-        "5 Mukhi beads",
-        "Blessed and energized",
-        "Comes with authenticity certificate",
-        "Traditional thread design"
-      ]
-    },
-    {
-      id: 5,
-      name: "Copper Kalash Set",
-      price: 699,
-      originalPrice: 899,
-      discount: "22% OFF",
-      rating: 4.6,
-      reviews: 78,
-      image: poojaImage,
-      category: "Vessels",
-      description: "Traditional copper kalash set for puja ceremonies. Includes kalash, coconut holder, and decorative elements.",
-      features: [
-        "Pure copper material",
-        "Complete puja set",
-        "Traditional design",
-        "Easy to maintain",
-        "Perfect for all rituals"
-      ]
-    },
-    {
-      id: 6,
-      name: "Sacred Thread - Cotton",
-      price: 99,
-      originalPrice: 149,
-      discount: "34% OFF",
-      rating: 4.8,
-      reviews: 145,
-      image: poojaImage,
-      category: "Accessories",
-      description: "Premium quality sacred thread made from pure cotton. Essential for daily puja and religious ceremonies.",
-      features: [
-        "100% pure cotton",
-        "Pack of 10 threads",
-        "Traditional preparation",
-        "Soft and comfortable",
-        "Suitable for all occasions"
-      ]
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
     }
-  ];
+  }, [productId]);
 
-  const product = products.find(p => p.id === Number(productId));
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast({
+          title: "Product not found",
+          description: "The requested product could not be found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProduct(data);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load product details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Skeleton className="h-12 w-48 mb-8" />
+          <div className="grid md:grid-cols-2 gap-8">
+            <Skeleton className="h-96 w-full" />
+            <div className="space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -154,9 +105,13 @@ const ProductDetail = () => {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.image_url || poojaImage,
       });
     }
+    toast({
+      title: "Added to cart",
+      description: `${quantity} ${product.name}(s) added to cart`,
+    });
   };
 
   const handleBuyNow = () => {
@@ -181,7 +136,7 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <Card className="overflow-hidden">
               <img
-                src={product.image}
+                src={product.image_url || poojaImage}
                 alt={product.name}
                 className="w-full h-96 object-cover"
               />
@@ -212,43 +167,30 @@ const ProductDetail = () => {
               </Badge>
               <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
               
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center">
-                  <Star className="h-5 w-5 fill-accent text-accent" />
-                  <span className="text-lg font-medium ml-1">{product.rating}</span>
-                </div>
-                <span className="text-muted-foreground">
-                  ({product.reviews} reviews)
-                </span>
-              </div>
-
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-4xl font-bold text-primary">₹{product.price}</span>
-                <span className="text-2xl text-muted-foreground line-through">
-                  ₹{product.originalPrice}
-                </span>
-                <Badge className="bg-accent text-accent-foreground">
-                  {product.discount}
-                </Badge>
+                {product.stock !== null && product.stock > 0 && (
+                  <Badge variant="secondary">In Stock: {product.stock}</Badge>
+                )}
+                {product.stock !== null && product.stock === 0 && (
+                  <Badge variant="destructive">Out of Stock</Badge>
+                )}
               </div>
             </div>
 
-            <Card className="p-4 bg-primary/5">
-              <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{product.description}</p>
-            </Card>
+            {product.description && (
+              <Card className="p-4 bg-primary/5">
+                <h3 className="font-semibold mb-2">Description</h3>
+                <p className="text-muted-foreground whitespace-pre-wrap">{product.description}</p>
+              </Card>
+            )}
 
-            <Card className="p-4">
-              <h3 className="font-semibold mb-3">Key Features</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="text-primary">✓</span>
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
+            {product.category && (
+              <Card className="p-4">
+                <h3 className="font-semibold mb-2">Category</h3>
+                <Badge variant="secondary">{product.category}</Badge>
+              </Card>
+            )}
 
             <Card className="p-6">
               <div className="flex items-center gap-4 mb-4">
@@ -278,6 +220,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-1"
                   onClick={handleBuyNow}
+                  disabled={product.stock === 0}
                 >
                   Buy Now
                 </Button>
@@ -286,6 +229,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-1"
                   onClick={handleAddToCart}
+                  disabled={product.stock === 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart

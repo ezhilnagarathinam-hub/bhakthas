@@ -17,7 +17,7 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
-  const { uploadFile, uploading } = useFileUpload('product-images');
+  const { uploadFile, uploading, dimensions } = useFileUpload('product-images');
 
   const [formData, setFormData] = useState({
     name: "",
@@ -214,6 +214,11 @@ const ProductManagement = () => {
                   />
                   {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                 </div>
+                {dimensions && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Image dimensions: {dimensions.width}x{dimensions.height}px
+                  </p>
+                )}
                 {formData.image_url && !imageFile && (
                   <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
                 )}

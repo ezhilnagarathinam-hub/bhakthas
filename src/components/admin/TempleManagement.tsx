@@ -22,7 +22,7 @@ const TempleManagement = () => {
   const [showDarshanConfig, setShowDarshanConfig] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
-  const { uploadFile, uploading } = useFileUpload('temple-images');
+  const { uploadFile, uploading, dimensions } = useFileUpload('temple-images');
   const { geocodeAddress, geocoding } = useGeocoding();
 
   const [formData, setFormData] = useState({
@@ -36,6 +36,7 @@ const TempleManagement = () => {
     longitude: "",
     quick_info: "",
     image_url: "",
+    video_url: "",
     rating: "4.5",
     points: "100",
     darshan_enabled: false
@@ -197,6 +198,7 @@ const TempleManagement = () => {
       longitude: temple.longitude.toString(),
       quick_info: temple.quick_info || "",
       image_url: temple.image_url || "",
+      video_url: temple.video_url || "",
       rating: temple.rating?.toString() || "4.5",
       points: temple.points?.toString() || "100",
       darshan_enabled: temple.darshan_enabled || false
@@ -253,6 +255,7 @@ const TempleManagement = () => {
       longitude: "",
       quick_info: "",
       image_url: "",
+      video_url: "",
       rating: "4.5",
       points: "100",
       darshan_enabled: false
@@ -397,10 +400,30 @@ const TempleManagement = () => {
                     />
                     {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                   </div>
+                  {dimensions && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Image dimensions: {dimensions.width}x{dimensions.height}px
+                    </p>
+                  )}
                   {formData.image_url && !imageFile && (
                     <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
                   )}
                 </div>
+                
+                <div>
+                  <Label htmlFor="video_url">YouTube Video URL</Label>
+                  <Input
+                    id="video_url"
+                    type="url"
+                    value={formData.video_url}
+                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Paste a YouTube video URL for a virtual temple tour
+                  </p>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="rating">Rating</Label>
