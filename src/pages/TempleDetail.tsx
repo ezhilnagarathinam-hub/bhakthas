@@ -20,7 +20,27 @@ interface Temple {
   rating: number;
   points: number;
   image_url: string | null;
+  video_url: string | null;
 }
+
+const getYouTubeEmbedUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  
+  // Handle various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+    /youtube\.com\/embed\/([^&\s]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+  
+  return null;
+};
 
 const TempleDetail = () => {
   const { templeId } = useParams();
@@ -127,28 +147,42 @@ const TempleDetail = () => {
           )}
         </div>
 
+        {/* Temple Image */}
+        {temple.image_url && (
+          <Card className="mb-8 overflow-hidden">
+            <img
+              src={temple.image_url}
+              alt={temple.name}
+              className="w-full h-96 object-cover"
+            />
+          </Card>
+        )}
+
         {/* YouTube Video Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Youtube className="h-5 w-5 text-red-600" />
-              Temple Video Tour
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <Youtube className="h-16 w-16 text-muted-foreground mx-auto" />
-                <p className="text-muted-foreground">
-                  Video content will be available soon
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Stay tuned for a virtual tour of {temple.name}
-                </p>
+        {temple.video_url ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Youtube className="h-5 w-5 text-red-600" />
+                Temple Video Tour
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="aspect-video rounded-lg overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={getYouTubeEmbedUrl(temple.video_url) || undefined}
+                  title={`${temple.name} Video Tour`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Temple Blog/Description */}
         <Card>
