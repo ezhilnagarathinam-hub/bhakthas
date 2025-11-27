@@ -211,7 +211,23 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4">
+                  <div className="pt-4 space-y-3">
+                    <h4 className="font-semibold">Payment Method</h4>
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-2xl">📱</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">UPI Payment</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Pay via Google Pay, PhonePe, Paytm
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                     <Card className="bg-muted/30">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3">

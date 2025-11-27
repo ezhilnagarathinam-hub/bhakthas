@@ -31,22 +31,25 @@ interface Temple {
   image_url: string;
 }
 
-type DarshanType = "standard_100" | "standard_500" | "vip_1000" | "free";
+interface DarshanPackage {
+  id: string;
+  package_name: string;
+  package_type: string;
+  price: number;
+  description: string | null;
+  duration_minutes: number | null;
+}
 
-const darshanOptions = [
-  { type: "standard_100" as DarshanType, label: "Standard Darshan", price: 100 },
-  { type: "standard_500" as DarshanType, label: "Premium Darshan", price: 500 },
-  { type: "vip_1000" as DarshanType, label: "Special VIP Darshan", price: 1000 },
-  { type: "free" as DarshanType, label: "Free Darshan", price: 0 },
-];
+type DarshanType = "standard_100" | "standard_500" | "vip_1000" | "free";
 
 const DarshanBooking = () => {
   const { templeId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [temple, setTemple] = useState<Temple | null>(null);
+  const [packages, setPackages] = useState<DarshanPackage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<DarshanType | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("10:00");
   const [numberOfTickets, setNumberOfTickets] = useState(1);
@@ -58,9 +61,14 @@ const DarshanBooking = () => {
     phone: "",
   });
 
+  const selectedPackage = packages.find(p => p.id === selectedPackageId);
+  const totalPrice = selectedPackage ? selectedPackage.price * numberOfTickets : 0;
+  const isFree = selectedPackage?.price === 0;
+
   useEffect(() => {
     if (templeId) {
       fetchTemple();
+      fetchPackages();
     }
   }, [templeId]);
 
@@ -81,6 +89,27 @@ const DarshanBooking = () => {
         variant: "destructive",
       });
       navigate("/darshan");
+    }
+  };
+
+  const fetchPackages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("darshan_packages")
+        .select("*")
+        .eq("temple_id", templeId)
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load darshan packages",
+        variant: "destructive",
+      });
     }
   };
 
@@ -113,10 +142,10 @@ const DarshanBooking = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedOption || !date) {
+    if (!selectedPackageId || !date) {
       toast({
         title: "Missing information",
-        description: "Please select darshan type and date",
+        description: "Please select darshan package and date",
         variant: "destructive",
       });
       return;
@@ -166,28 +195,43 @@ const DarshanBooking = () => {
         return;
       }
 
-      const selectedDarshan = darshanOptions.find(opt => opt.type === selectedOption);
-      
+      if (!selectedPackage) {
+        toast({
+          title: "Error",
+          description: "Selected package not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Generate cryptographically secure invoice number
       const randomBytes = new Uint8Array(8);
       crypto.getRandomValues(randomBytes);
       const randomHex = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
       const invoiceNumber = `INV-${format(new Date(), "yyyyMMdd")}-${randomHex.substring(0, 12).toUpperCase()}`;
 
+      // Determine darshan type from package type
+      const darshanTypeMap: Record<string, DarshanType> = {
+        'standard_100': 'standard_100',
+        'standard_500': 'standard_500',
+        'vip_1000': 'vip_1000',
+        'free': 'free'
+      };
+
       const { data: booking, error } = await supabase
         .from("darshan_bookings")
         .insert({
           user_id: user.id,
           temple_id: templeId,
-          darshan_type: selectedOption,
-          amount_paid: selectedDarshan?.price || 0,
+          darshan_type: darshanTypeMap[selectedPackage.package_type] || 'free',
+          amount_paid: totalPrice,
           darshan_date: format(date, "yyyy-MM-dd"),
           darshan_time: time,
           invoice_number: invoiceNumber,
           customer_name: validation.data.name,
           customer_email: validation.data.email,
           customer_phone: validation.data.phone,
-          status: "awaiting",
+          status: isFree ? "confirmed" : "awaiting",
           number_of_tickets: numberOfTickets,
           bhaktha_details: bhakthas.map(b => ({
             name: b.name,
@@ -203,14 +247,14 @@ const DarshanBooking = () => {
 
       toast({
         title: "Booking created!",
-        description: "Your darshan booking has been created",
+        description: isFree ? "Your free darshan has been confirmed" : "Proceed to payment",
       });
 
-      // If free darshan, go directly to ticket
-      if (selectedOption === "free") {
+      // If free darshan, go directly to ticket with confirmed status
+      if (isFree) {
         navigate(`/darshan/ticket/${booking.id}`);
       } else {
-        // For paid options, go to payment page
+        // For paid packages, go to payment page
         navigate(`/darshan/payment/${booking.id}`);
       }
     } catch (error) {
@@ -245,41 +289,81 @@ const DarshanBooking = () => {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Darshan Type Selection */}
+          {/* Darshan Package Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Select Darshan Type</CardTitle>
+              <CardTitle>Select Darshan Package</CardTitle>
               <CardDescription>Choose the darshan package that suits you best</CardDescription>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              {darshanOptions.map((option) => (
-                <Card
-                  key={option.type}
-                  className={`cursor-pointer transition-all ${
-                    selectedOption === option.type
-                      ? "ring-2 ring-primary"
-                      : "hover:shadow-md"
-                  }`}
-                  onClick={() => setSelectedOption(option.type)}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
+            <CardContent className="space-y-4">
+              {packages.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No darshan packages available for this temple
+                </p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {packages.map((pkg) => (
+                    <Card
+                      key={pkg.id}
+                      className={`cursor-pointer transition-all ${
+                        selectedPackageId === pkg.id
+                          ? "ring-2 ring-primary"
+                          : "hover:shadow-md"
+                      }`}
+                      onClick={() => setSelectedPackageId(pkg.id)}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{pkg.package_name}</h3>
+                            {pkg.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{pkg.description}</p>
+                            )}
+                            {pkg.duration_minutes && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Duration: {pkg.duration_minutes} minutes
+                              </p>
+                            )}
+                            <p className="text-2xl font-bold text-primary mt-2">
+                              ₹{pkg.price}
+                              {pkg.price === 0 && <span className="text-sm text-muted-foreground ml-2">(Free)</span>}
+                            </p>
+                          </div>
+                          {selectedPackageId === pkg.id && (
+                            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                              <Check className="h-4 w-4 text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              
+              {/* Total Price Display */}
+              {selectedPackage && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-semibold text-lg">{option.label}</h3>
-                        <p className="text-2xl font-bold text-primary mt-2">
-                          ₹{option.price}
-                          {option.price === 0 && <span className="text-sm text-muted-foreground ml-2">(Free)</span>}
+                        <p className="text-sm text-muted-foreground">Total Amount</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {numberOfTickets} × ₹{selectedPackage.price}
                         </p>
                       </div>
-                      {selectedOption === option.type && (
-                        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="h-4 w-4 text-primary-foreground" />
-                        </div>
-                      )}
+                      <p className="text-3xl font-bold text-primary">
+                        ₹{totalPrice}
+                      </p>
                     </div>
+                    {isFree && (
+                      <p className="text-sm text-green-600 mt-2">
+                        ✓ This is a free darshan. Your ticket will be confirmed immediately.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -451,9 +535,9 @@ const DarshanBooking = () => {
             variant="sacred"
             size="lg"
             className="w-full"
-            disabled={loading || !selectedOption || !date}
+            disabled={loading || !selectedPackageId || !date || packages.length === 0}
           >
-            {loading ? "Processing..." : "Proceed to Book"}
+            {loading ? "Processing..." : isFree ? "Confirm Free Darshan" : `Proceed to Pay ₹${totalPrice}`}
           </Button>
         </form>
       </div>
