@@ -64,9 +64,20 @@ const DarshanPayment = () => {
     setLoading(true);
     
     try {
-      // Generate UPI payment link
-      const upiId = "temple@upi"; // Replace with actual temple UPI ID
       const amount = booking.amount_paid;
+      
+      // For free darshan, skip payment but still require admin approval
+      if (amount === 0) {
+        toast({
+          title: "Booking Submitted",
+          description: "Your free darshan booking is awaiting admin approval",
+        });
+        navigate(`/darshan/ticket/${bookingId}`);
+        return;
+      }
+
+      // Generate UPI payment link for paid darshan
+      const upiId = "temple@upi"; // Replace with actual temple UPI ID
       const upiLink = `upi://pay?pa=${upiId}&pn=Temple Darshan&am=${amount}&cu=INR&tn=Darshan ${booking.invoice_number}`;
       
       // Try to open UPI payment
@@ -82,31 +93,24 @@ const DarshanPayment = () => {
       } else {
         toast({
           title: "Payment Initiated",
-          description: "Complete payment in your UPI app",
+          description: "Complete payment in your UPI app. Admin will verify and confirm your booking.",
+          duration: 8000,
         });
       }
 
-      // Wait for user to complete payment (in production, use webhook/callback)
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Update booking status to confirmed after payment
-      const { error } = await supabase
-        .from("darshan_bookings")
-        .update({ status: "confirmed" })
-        .eq("id", bookingId);
-
-      if (error) throw error;
-
+      // Note: Status remains "awaiting" until admin confirms
       toast({
-        title: "Payment Successful!",
-        description: "Your darshan booking is confirmed",
+        title: "Awaiting Confirmation",
+        description: "Your booking will be confirmed by admin after payment verification",
+        duration: 6000,
       });
 
+      // Go to ticket page (will show awaiting status)
       navigate(`/darshan/ticket/${bookingId}`);
     } catch (error) {
       console.error("Payment error:", error);
       toast({
-        title: "Payment Error",
+        title: "Error",
         description: "Failed to process payment. Please try again.",
         variant: "destructive",
       });
@@ -214,8 +218,17 @@ const DarshanPayment = () => {
               className="w-full mt-6"
               disabled={loading}
             >
-              {loading ? "Opening UPI App..." : "Pay with UPI"}
+              {loading 
+                ? "Processing..." 
+                : booking.amount_paid === 0 
+                  ? "Submit Free Darshan Booking"
+                  : "Pay with UPI"
+              }
             </Button>
+            
+            <p className="text-xs text-center text-muted-foreground mt-4">
+              Note: All bookings require admin approval and verification before confirmation
+            </p>
           </CardContent>
         </Card>
       </div>
