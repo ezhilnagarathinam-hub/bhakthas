@@ -15,6 +15,7 @@ interface Booking {
   darshan_time: string;
   customer_name: string;
   invoice_number: string;
+  number_of_tickets: number;
   temples: {
     name: string;
   };
@@ -58,25 +59,60 @@ const DarshanPayment = () => {
   };
 
   const handlePayment = async () => {
+    if (!booking) return;
+    
     setLoading(true);
     
-    // Generate UPI payment link
-    const upiId = "temple@upi"; // Replace with actual temple UPI ID
-    const amount = booking?.amount_paid || 0;
-    const upiLink = `upi://pay?pa=${upiId}&pn=Temple Darshan&am=${amount}&cu=INR&tn=Darshan Booking ${booking?.invoice_number}`;
-    
-    // Open UPI payment
-    window.location.href = upiLink;
-    
-    // Simulate payment verification
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      // Generate UPI payment link
+      const upiId = "temple@upi"; // Replace with actual temple UPI ID
+      const amount = booking.amount_paid;
+      const upiLink = `upi://pay?pa=${upiId}&pn=Temple Darshan&am=${amount}&cu=INR&tn=Darshan ${booking.invoice_number}`;
+      
+      // Try to open UPI payment
+      const paymentWindow = window.open(upiLink, '_blank');
+      
+      // If popup blocked or UPI not supported, show instructions
+      if (!paymentWindow) {
+        toast({
+          title: "Payment Information",
+          description: `Please pay ₹${amount} to UPI ID: ${upiId} with reference: ${booking.invoice_number}`,
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "Payment Initiated",
+          description: "Complete payment in your UPI app",
+        });
+      }
 
-    toast({
-      title: "Payment Initiated!",
-      description: "Complete payment in your UPI app to confirm booking",
-    });
+      // Wait for user to complete payment (in production, use webhook/callback)
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-    navigate(`/darshan/ticket/${bookingId}`);
+      // Update booking status to confirmed after payment
+      const { error } = await supabase
+        .from("darshan_bookings")
+        .update({ status: "confirmed" })
+        .eq("id", bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Payment Successful!",
+        description: "Your darshan booking is confirmed",
+      });
+
+      navigate(`/darshan/ticket/${bookingId}`);
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to process payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!booking) {
@@ -129,6 +165,10 @@ const DarshanPayment = () => {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Time</span>
                 <span className="font-semibold">{booking.darshan_time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Number of Tickets</span>
+                <span className="font-semibold">{booking.number_of_tickets}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Name</span>
