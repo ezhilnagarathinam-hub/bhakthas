@@ -28,16 +28,20 @@ const Products = () => {
   }, []);
 
   const fetchProducts = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name');
-    
-    if (!error && data) {
-      setProducts(data);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('name');
+      
+      if (!error && data) {
+        setProducts(data);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const categories = ["All", ...new Set(products.map(p => p.category).filter(Boolean))];
@@ -57,7 +61,7 @@ const Products = () => {
     });
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center space-y-4">
@@ -179,7 +183,7 @@ const Products = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
