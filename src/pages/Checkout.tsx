@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const checkoutSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -19,11 +20,14 @@ const checkoutSchema = z.object({
   pincode: z.string().trim().regex(/^[0-9]{6}$/, "Pincode must be exactly 6 digits"),
 });
 
+const UPI_ID = "bhakthas@upi"; // Replace with actual UPI ID
+
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"upi" | "cod">("upi");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -42,7 +46,6 @@ const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form data
     const validation = checkoutSchema.safeParse(formData);
     if (!validation.success) {
       const firstError = validation.error.errors[0];
@@ -76,19 +79,30 @@ const Checkout = () => {
           product_id: item.id.toString(),
           quantity: item.quantity,
           total_price: item.price * item.quantity,
-          status: "pending",
+          status: paymentMethod === "cod" ? "pending" : "awaiting_payment",
         });
 
         if (error) throw error;
       }
 
-      toast({
-        title: "Order placed successfully!",
-        description: "Your order has been placed with Cash on Delivery",
-      });
+      if (paymentMethod === "upi") {
+        // Open UPI payment app
+        const upiUrl = `upi://pay?pa=${UPI_ID}&pn=Bhakthas&am=${totalPrice}&cu=INR&tn=Order%20Payment`;
+        window.location.href = upiUrl;
+        
+        toast({
+          title: "Opening UPI App",
+          description: "Complete the payment in your UPI app. Your order will be confirmed after payment verification.",
+        });
+      } else {
+        toast({
+          title: "Order placed successfully!",
+          description: "Your order has been placed with Cash on Delivery",
+        });
+      }
 
       clearCart();
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       toast({
         title: "Order failed",
@@ -213,36 +227,40 @@ const Checkout = () => {
 
                   <div className="pt-4 space-y-3">
                     <h4 className="font-semibold">Payment Method</h4>
-                    <Card className="bg-muted/30">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-2xl">📱</span>
+                    <RadioGroup value={paymentMethod} onValueChange={(val) => setPaymentMethod(val as "upi" | "cod")}>
+                      <Card className={`cursor-pointer transition-all ${paymentMethod === "upi" ? "ring-2 ring-primary bg-primary/5" : "bg-muted/30"}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <RadioGroupItem value="upi" id="upi" />
+                            <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-2xl">📱</span>
+                            </div>
+                            <div className="flex-1">
+                              <Label htmlFor="upi" className="font-semibold cursor-pointer">UPI Payment</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Pay via Google Pay, PhonePe, Paytm
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-semibold">UPI Payment</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Pay via Google Pay, PhonePe, Paytm
-                            </p>
+                        </CardContent>
+                      </Card>
+                      <Card className={`cursor-pointer transition-all ${paymentMethod === "cod" ? "ring-2 ring-primary bg-primary/5" : "bg-muted/30"}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <RadioGroupItem value="cod" id="cod" />
+                            <div className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center">
+                              <span className="text-2xl">💰</span>
+                            </div>
+                            <div className="flex-1">
+                              <Label htmlFor="cod" className="font-semibold cursor-pointer">Cash on Delivery</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Pay when you receive your order
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-muted/30">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center">
-                            <span className="text-2xl">💰</span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">Cash on Delivery</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Pay when you receive your order
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </RadioGroup>
                   </div>
 
                   <Button
@@ -252,7 +270,7 @@ const Checkout = () => {
                     size="lg"
                     disabled={loading}
                   >
-                    {loading ? "Placing Order..." : "Place Order (COD)"}
+                    {loading ? "Processing..." : paymentMethod === "upi" ? `Pay ₹${totalPrice} via UPI` : "Place Order (COD)"}
                   </Button>
                 </form>
               </CardContent>
