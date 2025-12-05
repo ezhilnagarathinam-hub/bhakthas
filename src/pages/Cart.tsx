@@ -108,7 +108,7 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center space-y-6">
             <ShoppingBag className="h-24 w-24 mx-auto text-muted-foreground" />
@@ -121,12 +121,12 @@ const Cart = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
@@ -271,7 +271,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -264,7 +264,7 @@ const Bhakthi = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Header */}
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -448,7 +448,7 @@ const Bhakthi = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </>
   );
 };
 

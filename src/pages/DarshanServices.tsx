@@ -108,7 +108,7 @@ const DarshanServices = () => {
   const uniqueCities = Array.from(new Set(temples.map(t => t.city).filter(Boolean)));
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="bg-gradient-sacred/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-sacred bg-clip-text text-transparent">
@@ -249,7 +249,7 @@ const DarshanServices = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
