@@ -96,7 +96,7 @@ const Navigation = () => {
             {user ? <>
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/dashboard" className="flex items-center gap-2">
-                    <User className="h-4 w-4 animate-om-rotate" />
+                    <User className="h-4 w-4 " />
                     <span className="hidden lg:inline">
                 </span>
                   </Link>
