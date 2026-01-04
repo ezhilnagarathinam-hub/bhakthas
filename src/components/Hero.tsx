@@ -46,7 +46,7 @@ const Hero = () => {
               <Link to="/knowledge-hub">
                 <Button variant="mystic" size="lg" className="group mx-0 py-0 px-[15px]">
                   Knowledge Hub
-                  <Star className="ml-2 h-5 w-5 group-hover:rotate-180 transition-transform animate-float" />
+                  <Star className="ml-2 h-5 w-5 group-hover:rotate-180" />
                 </Button>
               </Link>
             </div>
