@@ -7,12 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Upload, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Upload, Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categories, setCategories] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -32,6 +37,10 @@ const ProductManagement = () => {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    filterProducts();
+  }, [products, searchTerm, categoryFilter]);
+
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from('products')
@@ -42,7 +51,26 @@ const ProductManagement = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setProducts(data || []);
+      const uniqueCategories = [...new Set(data?.map(p => p.category).filter(Boolean))] as string[];
+      setCategories(uniqueCategories);
     }
+  };
+
+  const filterProducts = () => {
+    let filtered = [...products];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(product => product.category === categoryFilter);
+    }
+    
+    setFilteredProducts(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +78,6 @@ const ProductManagement = () => {
 
     let imageUrl = formData.image_url;
 
-    // Upload new image if selected
     if (imageFile) {
       const uploadedUrl = await uploadFile(imageFile);
       if (!uploadedUrl) {
@@ -243,6 +270,28 @@ const ProductManagement = () => {
         </Dialog>
       </CardHeader>
       <CardContent>
+        <div className="flex gap-4 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -254,7 +303,7 @@ const ProductManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
@@ -272,6 +321,9 @@ const ProductManagement = () => {
             ))}
           </TableBody>
         </Table>
+        {filteredProducts.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">No products found</p>
+        )}
       </CardContent>
     </Card>
   );

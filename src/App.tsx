@@ -23,6 +23,12 @@ import AuthLayout from "./pages/AuthLayout";
 import UserDashboardLayout from "./pages/UserDashboardLayout";
 import ContributeLayout from "./pages/ContributeLayout";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import DeliveryReturns from "./pages/DeliveryReturns";
+import FAQ from "./pages/FAQ";
+import HelpCentre from "./pages/HelpCentre";
+import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +58,12 @@ const App = () => (
             <Route path="/contribute" element={<ContributeLayout />} />
             <Route path="/admin" element={<AdminLayout />} />
             <Route path="/auth" element={<AuthLayout />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-conditions" element={<TermsConditions />} />
+            <Route path="/delivery-returns" element={<DeliveryReturns />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/help-centre" element={<HelpCentre />} />
+            <Route path="/blog" element={<Blog />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

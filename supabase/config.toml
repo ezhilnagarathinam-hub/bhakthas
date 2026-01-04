@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.geocode-address]
 verify_jwt = true
+
+[functions.send-order-status-email]
+verify_jwt = false
