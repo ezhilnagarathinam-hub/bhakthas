@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -11,14 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { format } from "date-fns";
+import { Search } from "lucide-react";
 
 interface Booking {
   id: string;
@@ -41,12 +37,21 @@ interface Booking {
 
 const DarshanBookingManagement = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [templeFilter, setTempleFilter] = useState("all");
+  const [temples, setTemples] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    filterBookings();
+  }, [bookings, searchTerm, statusFilter, templeFilter]);
 
   const fetchBookings = async () => {
     try {
@@ -64,6 +69,9 @@ const DarshanBookingManagement = () => {
 
       if (error) throw error;
       setBookings(data.bookings || []);
+      
+      const uniqueTemples = [...new Set(data.bookings?.map((b: Booking) => b.temples?.name).filter(Boolean))] as string[];
+      setTemples(uniqueTemples);
     } catch (error) {
       toast({
         title: "Error",
@@ -73,6 +81,28 @@ const DarshanBookingManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterBookings = () => {
+    let filtered = [...bookings];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(booking => 
+        booking.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.invoice_number.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(booking => booking.status === statusFilter);
+    }
+    
+    if (templeFilter !== "all") {
+      filtered = filtered.filter(booking => booking.temples?.name === templeFilter);
+    }
+    
+    setFilteredBookings(filtered);
   };
 
   const updateStatus = async (bookingId: string, newStatus: "awaiting" | "confirmed" | "cancelled" | "refunded") => {
@@ -158,6 +188,41 @@ const DarshanBookingManagement = () => {
         </Button>
       </div>
 
+      <div className="flex gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search by name, email or invoice..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="awaiting">Awaiting</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="refunded">Refunded</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={templeFilter} onValueChange={setTempleFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Temple" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Temples</SelectItem>
+            {temples.map(temple => (
+              <SelectItem key={temple} value={temple}>{temple}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden border border-border">
         <Table>
           <TableHeader>
@@ -174,12 +239,12 @@ const DarshanBookingManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <TableRow key={booking.id}>
                 <TableCell className="font-mono text-xs">
                   {booking.invoice_number}
                 </TableCell>
-                <TableCell>{booking.temples.name}</TableCell>
+                <TableCell>{booking.temples?.name}</TableCell>
                 <TableCell>
                   <div className="space-y-1">
                     <p className="font-medium">{booking.customer_name}</p>
@@ -221,7 +286,7 @@ const DarshanBookingManagement = () => {
         </Table>
       </div>
 
-      {bookings.length === 0 && (
+      {filteredBookings.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No bookings found
         </div>

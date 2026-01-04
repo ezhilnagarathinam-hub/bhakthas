@@ -3,19 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Search } from "lucide-react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [verificationFilter, setVerificationFilter] = useState("all");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
-    fetchVisits();
   }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [users, searchTerm, verificationFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -41,8 +48,23 @@ const UserManagement = () => {
     }
   };
 
-  const fetchVisits = async () => {
-    // Visits are now fetched with users
+  const filterUsers = () => {
+    let filtered = [...users];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (verificationFilter !== "all") {
+      filtered = filtered.filter(user => {
+        if (verificationFilter === "verified") return user.email_confirmed_at;
+        return !user.email_confirmed_at;
+      });
+    }
+    
+    setFilteredUsers(filtered);
   };
 
   const getUserPoints = (userId: string) => {
@@ -60,14 +82,11 @@ const UserManagement = () => {
         return;
       }
 
-      // Note: Email verification status can only be updated through Supabase Admin API
-      // This is a placeholder for the UI - actual implementation requires backend edge function
       toast({ 
         title: "Success", 
         description: `User verification status updated to ${isVerified ? 'Verified' : 'Pending'}`,
       });
       
-      // Refresh users
       fetchUsers();
     } catch (error: any) {
       toast({ 
@@ -82,6 +101,27 @@ const UserManagement = () => {
     <Card>
       <CardHeader>
         <CardTitle>User Management</CardTitle>
+        <div className="flex gap-4 mt-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search by email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -95,7 +135,7 @@ const UserManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.email}</TableCell>
                 <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
@@ -125,6 +165,9 @@ const UserManagement = () => {
             ))}
           </TableBody>
         </Table>
+        {filteredUsers.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">No users found</p>
+        )}
       </CardContent>
     </Card>
   );

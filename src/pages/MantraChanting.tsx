@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen, Heart, Share2 } from "lucide-react";
+import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen, Heart, Share2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -335,6 +335,29 @@ const MantraChanting = () => {
                   .map((mantra) => (
                     <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine relative" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
                       <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        {mantra.audio_url && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 rounded-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const link = document.createElement('a');
+                              link.href = mantra.audio_url!;
+                              link.download = `${mantra.title.replace(/\s+/g, '_')}.mp3`;
+                              link.target = '_blank';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              toast({
+                                title: "Download Started",
+                                description: `Downloading ${mantra.title} audio`,
+                              });
+                            }}
+                          >
+                            <Download className="h-3 w-3" />
+                          </Button>
+                        )}
                         <Button
                           size="icon"
                           variant="ghost"
@@ -399,9 +422,31 @@ const MantraChanting = () => {
                           />
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-muted-foreground">Audio Mantra</span>
-                            <Badge variant="secondary">
-                              {audioRepeatCount + 1} / {target}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = selectedMantra.audio_url!;
+                                  link.download = `${selectedMantra.title.replace(/\s+/g, '_')}.mp3`;
+                                  link.target = '_blank';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  toast({
+                                    title: "Download Started",
+                                    description: `Downloading ${selectedMantra.title} audio`,
+                                  });
+                                }}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                              <Badge variant="secondary">
+                                {audioRepeatCount + 1} / {target}
+                              </Badge>
+                            </div>
                           </div>
                           <Button 
                             onClick={toggleAudioPlayback}

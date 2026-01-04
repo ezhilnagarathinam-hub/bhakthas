@@ -7,12 +7,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
 const MantraManagement = () => {
   const [mantras, setMantras] = useState<any[]>([]);
+  const [filteredMantras, setFilteredMantras] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deityFilter, setDeityFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [deities, setDeities] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMantra, setEditingMantra] = useState<any>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -34,6 +41,10 @@ const MantraManagement = () => {
     fetchMantras();
   }, []);
 
+  useEffect(() => {
+    filterMantras();
+  }, [mantras, searchTerm, deityFilter, categoryFilter]);
+
   const fetchMantras = async () => {
     const { data, error } = await supabase
       .from('mantras')
@@ -44,7 +55,32 @@ const MantraManagement = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setMantras(data || []);
+      const uniqueDeities = [...new Set(data?.map(m => m.deity).filter(Boolean))] as string[];
+      const uniqueCategories = [...new Set(data?.map(m => m.category).filter(Boolean))] as string[];
+      setDeities(uniqueDeities);
+      setCategories(uniqueCategories);
     }
+  };
+
+  const filterMantras = () => {
+    let filtered = [...mantras];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(mantra => 
+        mantra.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        mantra.sanskrit_text?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (deityFilter !== "all") {
+      filtered = filtered.filter(mantra => mantra.deity === deityFilter);
+    }
+    
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(mantra => mantra.category === categoryFilter);
+    }
+    
+    setFilteredMantras(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +88,6 @@ const MantraManagement = () => {
 
     let audioUrl = formData.audio_url;
 
-    // Upload new audio if selected
     if (audioFile) {
       const uploadedUrl = await uploadFile(audioFile);
       if (!uploadedUrl) {
@@ -255,6 +290,39 @@ const MantraManagement = () => {
         </Dialog>
       </CardHeader>
       <CardContent>
+        <div className="flex gap-4 mb-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search mantras..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={deityFilter} onValueChange={setDeityFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by deity" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Deities</SelectItem>
+              {deities.map(deity => (
+                <SelectItem key={deity} value={deity}>{deity}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -265,7 +333,7 @@ const MantraManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mantras.map((mantra) => (
+            {filteredMantras.map((mantra) => (
               <TableRow key={mantra.id}>
                 <TableCell className="font-medium">{mantra.title}</TableCell>
                 <TableCell>{mantra.deity}</TableCell>
@@ -282,6 +350,9 @@ const MantraManagement = () => {
             ))}
           </TableBody>
         </Table>
+        {filteredMantras.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">No mantras found</p>
+        )}
       </CardContent>
     </Card>
   );
