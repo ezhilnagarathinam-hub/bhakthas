@@ -333,13 +333,13 @@ const MantraChanting = () => {
                     return 0;
                   })
                   .map((mantra) => (
-                    <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine relative" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
-                      <div className="absolute top-2 right-2 flex gap-1 z-10">
-                        {mantra.audio_url && (
+                    <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine relative overflow-hidden" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
+                      {mantra.audio_url && (
+                        <div className="bg-gradient-sacred p-2">
                           <Button
-                            size="icon"
+                            size="sm"
                             variant="ghost"
-                            className="h-7 w-7 rounded-full"
+                            className="w-full text-white hover:bg-white/20"
                             onClick={(e) => {
                               e.stopPropagation();
                               const link = document.createElement('a');
@@ -349,35 +349,19 @@ const MantraChanting = () => {
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);
-                              toast({
-                                title: "Download Started",
-                                description: `Downloading ${mantra.title} audio`,
-                              });
+                              toast({ title: "Download Started", description: `Downloading ${mantra.title} audio` });
                             }}
                           >
-                            <Download className="h-3 w-3" />
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Audio
                           </Button>
-                        )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(mantra.id);
-                          }}
-                        >
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleFavorite(mantra.id); }}>
                           <Heart className={`h-3 w-3 ${isFavorite(mantra.id) ? 'fill-red-500 text-red-500' : ''}`} />
                         </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            shareItem(mantra.title, mantra.translation || mantra.sanskrit_text, window.location.href);
-                          }}
-                        >
+                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); shareItem(mantra.title, mantra.translation || mantra.sanskrit_text, window.location.href); }}>
                           <Share2 className="h-3 w-3" />
                         </Button>
                       </div>

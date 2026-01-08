@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart, Upload, Ticket } from "lucide-react";
+import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart, Upload, Ticket, Trophy, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ProductManagement from "@/components/admin/ProductManagement";
@@ -10,12 +9,13 @@ import TempleManagement from "@/components/admin/TempleManagement";
 import MantraManagement from "@/components/admin/MantraManagement";
 import OrderManagement from "@/components/admin/OrderManagement";
 import UserManagement from "@/components/admin/UserManagement";
-import UsageReports from "@/components/admin/UsageReports";
 import Analytics from "@/components/admin/Analytics";
 import DarshanBookingManagement from "@/components/admin/DarshanBookingManagement";
 import ContributionManagement from "@/components/admin/ContributionManagement";
 import ReportDownload from "@/components/admin/ReportDownload";
 import PromoCodeManagement from "@/components/admin/PromoCodeManagement";
+import VolunteerManagement from "@/components/admin/VolunteerManagement";
+import ChallengeManagement from "@/components/admin/ChallengeManagement";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -103,7 +103,7 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid grid-cols-4 lg:grid-cols-9 gap-2 bg-gradient-to-r from-red-950 to-yellow-950 border-2 border-yellow-600/30 p-2 shadow-divine">
+          <TabsList className="grid grid-cols-4 lg:grid-cols-11 gap-2 bg-gradient-to-r from-red-950 to-yellow-950 border-2 border-yellow-600/30 p-2 shadow-divine">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
@@ -131,6 +131,14 @@ const Admin = () => {
             <TabsTrigger value="contributions" className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Contributions</span>
+            </TabsTrigger>
+            <TabsTrigger value="volunteers" className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              <span className="hidden sm:inline">Volunteers</span>
+            </TabsTrigger>
+            <TabsTrigger value="challenges" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              <span className="hidden sm:inline">Challenges</span>
             </TabsTrigger>
             <TabsTrigger value="promos" className="flex items-center gap-2">
               <Ticket className="w-4 h-4" />
@@ -168,6 +176,14 @@ const Admin = () => {
 
           <TabsContent value="contributions">
             <ContributionManagement />
+          </TabsContent>
+
+          <TabsContent value="volunteers">
+            <VolunteerManagement />
+          </TabsContent>
+
+          <TabsContent value="challenges">
+            <ChallengeManagement />
           </TabsContent>
 
           <TabsContent value="promos">
