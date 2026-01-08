@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 const UserDashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -16,16 +15,19 @@ const UserDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [bhakthiScore, setBhakthiScore] = useState(0);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     checkAuth();
   }, []);
-
   const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Authentication Required",
@@ -35,7 +37,6 @@ const UserDashboard = () => {
         navigate('/auth');
         return;
       }
-
       setUser(session.user);
       await fetchUserData(session.user.id);
     } catch (error) {
@@ -43,31 +44,16 @@ const UserDashboard = () => {
       setLoading(false);
     }
   };
-
   const fetchUserData = async (userId: string) => {
     try {
       // Fetch all data in parallel
-      const [ordersRes, bookingsRes, pointsRes] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*, products(*)')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('darshan_bookings')
-          .select('*, temples(name)')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('user_bhakthi_points')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle()
-      ]);
-
+      const [ordersRes, bookingsRes, pointsRes] = await Promise.all([supabase.from('orders').select('*, products(*)').eq('user_id', userId).order('created_at', {
+        ascending: false
+      }), supabase.from('darshan_bookings').select('*, temples(name)').eq('user_id', userId).order('created_at', {
+        ascending: false
+      }), supabase.from('user_bhakthi_points').select('*').eq('user_id', userId).maybeSingle()]);
       setOrders(ordersRes.data || []);
       setBookings(bookingsRes.data || []);
-
       if (pointsRes.data) {
         setBhakthiScore(pointsRes.data.total_points || 0);
       }
@@ -77,15 +63,12 @@ const UserDashboard = () => {
       setLoading(false);
     }
   };
-
   const getDiscountPercentage = () => {
-    return Math.min(Math.floor((bhakthiScore / 1000) * 25), 25);
+    return Math.min(Math.floor(bhakthiScore / 1000 * 25), 25);
   };
-
   const getProgressToNextReward = () => {
-    return (bhakthiScore % 1000) / 10;
+    return bhakthiScore % 1000 / 10;
   };
-
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
@@ -100,20 +83,15 @@ const UserDashboard = () => {
         return 'bg-gray-500';
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
+    return <div className="flex items-center justify-center py-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
@@ -124,10 +102,7 @@ const UserDashboard = () => {
             Welcome back, {user?.email?.split('@')[0]}!
           </p>
         </div>
-        <Button 
-          onClick={() => navigate('/contribute')}
-          className="bg-gradient-sacred hover:opacity-90"
-        >
+        <Button onClick={() => navigate('/contribute')} className="bg-gradient-sacred hover:opacity-90">
           <Upload className="w-4 h-4 mr-2" />
           Contribute Temple
         </Button>
@@ -161,7 +136,7 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-peaceful border-2 border-green-500/30">
+        <Card className="bg-gradient-peaceful border-2 border-[#62f98d]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <Trophy className="w-5 h-5" />
@@ -199,15 +174,11 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {orders.slice(0, 5).map((order, index) => (
-                <div key={order.id} className="flex justify-between items-center border-b pb-2">
+              {orders.slice(0, 5).map((order, index) => <div key={order.id} className="flex justify-between items-center border-b pb-2">
                   <span className="text-sm">Order #{index + 1}</span>
                   <Badge variant="secondary">{getDiscountPercentage()}% discount</Badge>
-                </div>
-              ))}
-              {orders.length === 0 && (
-                <p className="text-sm text-muted-foreground">No discounts used yet</p>
-              )}
+                </div>)}
+              {orders.length === 0 && <p className="text-sm text-muted-foreground">No discounts used yet</p>}
             </div>
           </CardContent>
         </Card>
@@ -225,7 +196,7 @@ const UserDashboard = () => {
                 <p className="text-sm text-muted-foreground mb-2">Points to Next Level</p>
                 <Progress value={getProgressToNextReward()} className="mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  {1000 - (bhakthiScore % 1000)} points needed for next 25% discount
+                  {1000 - bhakthiScore % 1000} points needed for next 25% discount
                 </p>
               </div>
               <div className="pt-4 border-t">
@@ -257,14 +228,10 @@ const UserDashboard = () => {
         </TabsList>
 
         <TabsContent value="bookings" className="space-y-4">
-          {bookings.length === 0 ? (
-            <Card className="p-8 text-center">
+          {bookings.length === 0 ? <Card className="p-8 text-center">
               <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground">No darshan bookings yet</p>
-            </Card>
-          ) : (
-            bookings.map((booking) => (
-              <Card key={booking.id}>
+            </Card> : bookings.map(booking => <Card key={booking.id}>
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -297,26 +264,18 @@ const UserDashboard = () => {
                       <p className="font-medium">₹{booking.amount_paid}</p>
                     </div>
                   </div>
-                  {booking.status === 'awaiting' && new Date(booking.darshan_date) < new Date() && (
-                    <p className="text-sm text-yellow-600 dark:text-yellow-500 mt-4">
+                  {booking.status === 'awaiting' && new Date(booking.darshan_date) < new Date() && <p className="text-sm text-yellow-600 dark:text-yellow-500 mt-4">
                       ⚠️ Note: Your booking is still awaiting confirmation past the darshan date. Payment will be refunded if not confirmed.
-                    </p>
-                  )}
+                    </p>}
                 </CardContent>
-              </Card>
-            ))
-          )}
+              </Card>)}
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-4">
-          {orders.length === 0 ? (
-            <Card className="p-8 text-center">
+          {orders.length === 0 ? <Card className="p-8 text-center">
               <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground">No product orders yet</p>
-            </Card>
-          ) : (
-            orders.map((order) => (
-              <Card key={order.id}>
+            </Card> : orders.map(order => <Card key={order.id}>
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -352,13 +311,9 @@ const UserDashboard = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))
-          )}
+              </Card>)}
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default UserDashboard;
