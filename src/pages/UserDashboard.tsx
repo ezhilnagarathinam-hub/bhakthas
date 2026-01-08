@@ -136,7 +136,7 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-peaceful border-2 border-[#62f98d]">
+        <Card className="bg-gradient-peaceful border-2 border-[#62f98d] bg-[#18ae04]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <Trophy className="w-5 h-5" />
