@@ -19,39 +19,51 @@ const UserDashboard = () => {
     toast
   } = useToast();
   useEffect(() => {
-    checkAuth();
-  }, []);
-  const checkAuth = async () => {
-    try {
-      const {
-        data: {
-          session
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to view your dashboard",
+            variant: "destructive"
+          });
+          navigate('/auth');
+          return;
         }
-      } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to view your dashboard",
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
+        setUser(session.user);
+        fetchUserData(session.user.id);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setLoading(false);
       }
-      setUser(session.user);
-      await fetchUserData(session.user.id);
-    } catch (error) {
-      console.error('Auth check error:', error);
-      setLoading(false);
-    }
-  };
+    };
+    
+    initAuth();
+  }, [navigate, toast]);
+
   const fetchUserData = async (userId: string) => {
     try {
-      // Fetch all data in parallel
-      const [ordersRes, bookingsRes, pointsRes] = await Promise.all([supabase.from('orders').select('*, products(*)').eq('user_id', userId).order('created_at', {
-        ascending: false
-      }), supabase.from('darshan_bookings').select('*, temples(name)').eq('user_id', userId).order('created_at', {
-        ascending: false
-      }), supabase.from('user_bhakthi_points').select('*').eq('user_id', userId).maybeSingle()]);
+      const [ordersRes, bookingsRes, pointsRes] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*, products(*)')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('darshan_bookings')
+          .select('*, temples(name)')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('user_bhakthi_points')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle()
+      ]);
+      
       setOrders(ordersRes.data || []);
       setBookings(bookingsRes.data || []);
       if (pointsRes.data) {

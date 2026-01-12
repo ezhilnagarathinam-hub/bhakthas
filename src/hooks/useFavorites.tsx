@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const useFavorites = (itemType: 'product' | 'temple' | 'mantra', userId: string | undefined) => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (userId) {
       fetchFavorites();
     } else {
+      setFavorites(new Set());
       setLoading(false);
     }
   }, [userId, itemType]);
@@ -19,19 +20,24 @@ export const useFavorites = (itemType: 'product' | 'temple' | 'mantra', userId: 
     if (!userId) return;
     
     setLoading(true);
-    const { data, error } = await supabase
-      .from('favorites')
-      .select('item_id')
-      .eq('user_id', userId)
-      .eq('item_type', itemType);
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('item_id')
+        .eq('user_id', userId)
+        .eq('item_type', itemType);
 
-    if (!error && data) {
-      setFavorites(new Set(data.map(f => f.item_id)));
+      if (!error && data) {
+        setFavorites(new Set(data.map(f => f.item_id)));
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const toggleFavorite = async (itemId: string) => {
+  const toggleFavorite = useCallback(async (itemId: string) => {
     if (!userId) {
       toast({
         title: "Login Required",
@@ -41,9 +47,9 @@ export const useFavorites = (itemType: 'product' | 'temple' | 'mantra', userId: 
       return;
     }
 
-    const isFavorite = favorites.has(itemId);
+    const isFav = favorites.has(itemId);
 
-    if (isFavorite) {
+    if (isFav) {
       const { error } = await supabase
         .from('favorites')
         .delete()
@@ -69,9 +75,9 @@ export const useFavorites = (itemType: 'product' | 'temple' | 'mantra', userId: 
         toast({ title: "Added to favorites" });
       }
     }
-  };
+  }, [userId, favorites, itemType, toast]);
 
-  const isFavorite = (itemId: string) => favorites.has(itemId);
+  const isFavorite = useCallback((itemId: string) => favorites.has(itemId), [favorites]);
 
   return { favorites, toggleFavorite, isFavorite, loading };
 };

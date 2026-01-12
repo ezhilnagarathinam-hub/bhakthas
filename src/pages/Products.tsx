@@ -28,18 +28,23 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  
   useEffect(() => {
     fetchProducts();
   }, []);
+  
   const fetchProducts = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('products').select('*').order('name');
-      if (!error && data) {
-        setProducts(data);
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching products:', error);
       }
+      setProducts(data || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {
