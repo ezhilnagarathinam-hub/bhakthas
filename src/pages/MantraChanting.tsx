@@ -334,14 +334,14 @@ const MantraChanting = () => {
                   })
                   .map((mantra) => (
                     <Card key={mantra.id} className="cursor-pointer hover:shadow-divine transition-divine relative overflow-hidden" onClick={() => { setSelectedMantra(mantra); setMantraDialogOpen(false); }}>
-                      {mantra.audio_url && (
-                        <div className="bg-gradient-sacred p-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="w-full text-white hover:bg-white/20"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        {mantra.audio_url && (
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-7 w-7 rounded-full bg-gradient-sacred text-white hover:opacity-80" 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
                               const link = document.createElement('a');
                               link.href = mantra.audio_url!;
                               link.download = `${mantra.title.replace(/\s+/g, '_')}.mp3`;
@@ -351,13 +351,11 @@ const MantraChanting = () => {
                               document.body.removeChild(link);
                               toast({ title: "Download Started", description: `Downloading ${mantra.title} audio` });
                             }}
+                            title="Download Audio"
                           >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download Audio
+                            <Download className="h-3 w-3" />
                           </Button>
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        )}
                         <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleFavorite(mantra.id); }}>
                           <Heart className={`h-3 w-3 ${isFavorite(mantra.id) ? 'fill-red-500 text-red-500' : ''}`} />
                         </Button>
@@ -365,10 +363,15 @@ const MantraChanting = () => {
                           <Share2 className="h-3 w-3" />
                         </Button>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-lg mb-1 pr-16">{mantra.title}</h3>
+                      <CardContent className="p-4 pt-10">
+                        <h3 className="font-bold text-lg mb-1">{mantra.title}</h3>
                         {mantra.deity && <Badge variant="secondary" className="mb-2">{mantra.deity}</Badge>}
                         <p className="text-sm text-muted-foreground line-clamp-2">{mantra.translation || mantra.sanskrit_text}</p>
+                        {mantra.audio_url && (
+                          <Badge variant="outline" className="mt-2 text-xs">
+                            🎵 Audio Available
+                          </Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

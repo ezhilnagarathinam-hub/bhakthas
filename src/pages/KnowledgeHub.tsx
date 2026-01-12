@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, BookOpen, Star, ChevronRight, Search, Heart, Share2 } from "lucide-react";
+import { MapPin, BookOpen, Star, ChevronRight, Search, Heart, Share2, Download, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { shareItem } from "@/utils/shareUtils";
+import jsPDF from "jspdf";
 
 interface Temple {
   id: string;
@@ -122,6 +123,126 @@ const KnowledgeHub = () => {
     navigate(`/knowledge-hub/${templeId}`);
   };
 
+  const downloadTemplePDF = useCallback(async (temple: Temple, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    toast({
+      title: "Generating PDF",
+      description: `Creating PDF for ${temple.name}...`,
+    });
+
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      
+      // Add watermark
+      pdf.setTextColor(200, 200, 200);
+      pdf.setFontSize(60);
+      pdf.text("Bhakthas", pageWidth / 2, pageHeight / 2, { 
+        align: "center", 
+        angle: 45 
+      });
+      
+      // Reset text color
+      pdf.setTextColor(0, 0, 0);
+      
+      // Header with brand
+      pdf.setFillColor(255, 140, 0);
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Bhakthas", margin, 25);
+      
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Your Divine Journey Companion", margin, 35);
+      
+      // Reset for content
+      pdf.setTextColor(0, 0, 0);
+      let yPos = 55;
+      
+      // Temple Name
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(temple.name, margin, yPos);
+      yPos += 15;
+      
+      // Location
+      if (temple.city && temple.state) {
+        pdf.setFontSize(12);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`${temple.city}, ${temple.state}`, margin, yPos);
+        yPos += 10;
+      }
+      
+      // Rating
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(11);
+      pdf.text(`Rating: ${temple.rating} / 5`, margin, yPos);
+      yPos += 10;
+      
+      pdf.text(`Points: +${temple.points}`, margin, yPos);
+      yPos += 15;
+      
+      // Description
+      if (temple.description) {
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("About", margin, yPos);
+        yPos += 8;
+        
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "normal");
+        const descLines = pdf.splitTextToSize(temple.description, pageWidth - 2 * margin);
+        pdf.text(descLines, margin, yPos);
+        yPos += descLines.length * 6 + 10;
+      }
+      
+      // Address
+      if (temple.address) {
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Address", margin, yPos);
+        yPos += 8;
+        
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "normal");
+        const addrLines = pdf.splitTextToSize(temple.address, pageWidth - 2 * margin);
+        pdf.text(addrLines, margin, yPos);
+        yPos += addrLines.length * 6 + 10;
+      }
+      
+      // Footer
+      pdf.setFillColor(255, 140, 0);
+      pdf.rect(0, pageHeight - 25, pageWidth, 25, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.text("Downloaded from Bhakthas - www.bhakthas.com", pageWidth / 2, pageHeight - 12, { align: "center" });
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 5, { align: "center" });
+      
+      // Save PDF
+      pdf.save(`${temple.name.replace(/\s+/g, '_')}_Bhakthas.pdf`);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: `${temple.name} PDF has been downloaded successfully!`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   const uniqueStates = Array.from(new Set(temples.map(t => t.state).filter(Boolean)));
   const uniqueCities = Array.from(new Set(temples.map(t => t.city).filter(Boolean)));
 
@@ -203,6 +324,15 @@ const KnowledgeHub = () => {
                     onClick={() => handleTempleClick(temple.id)}
                   >
                     <div className="absolute top-3 right-3 flex gap-2 z-10">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="rounded-full shadow-lg h-8 w-8"
+                        onClick={(e) => downloadTemplePDF(temple, e)}
+                        title="Download PDF"
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
                       <Button
                         size="icon"
                         variant="secondary"
