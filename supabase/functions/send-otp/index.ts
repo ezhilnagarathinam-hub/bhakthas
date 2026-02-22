@@ -1,6 +1,8 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
+
+// Minimal ambient for the Deno env used by Supabase Edge Functions
+declare const Deno: { env: { get(name: string): string | undefined } };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const TWILIO_SID = Deno.env.get("TWILIO_SID");
@@ -9,8 +11,15 @@ const TWILIO_FROM = Deno.env.get("TWILIO_FROM");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE");
 
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 const supabase = createClient(SUPABASE_URL || "", SUPABASE_SERVICE_ROLE || "");
+
+// Helper to produce base64 for Basic auth in both Deno and Node runtimes
+const base64 = (str: string) => {
+  if (typeof (globalThis as any).btoa === 'function') return (globalThis as any).btoa(str);
+  // @ts-ignore Buffer may not exist in some runtimes, but Node will have it
+  if (typeof (globalThis as any).Buffer !== 'undefined') return (globalThis as any).Buffer.from(str).toString('base64');
+  throw new Error('No base64 encoding available');
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,20 +54,30 @@ serve(async (req: Request) => {
 
     if (insertErr) {
       console.error('DB insert error', insertErr);
-      return new Response(JSON.stringify({ error: 'DB error' }), { status: 500, headers: corsHeaders });
+      return new (globalThis as any).Response(JSON.stringify({ error: 'DB error' }), { status: 500, headers: corsHeaders });
     }
 
     // send via email or SMS
     if (type === 'email') {
-      if (!resend) {
+      if (!RESEND_API_KEY) {
         console.warn('Resend not configured; OTP:', code);
       } else {
-        await resend.emails.send({
-          from: 'Bhakthas <onboarding@resend.dev>',
-          to: [target],
-          subject: 'Your OTP code',
-          html: `<p>Your OTP code is <strong>${code}</strong>. It expires in 5 minutes.</p>`,
-        });
+        // Import Resend dynamically so this file doesn't fail to load in environments
+        // where npm: imports are not available at module-evaluation time.
+        try {
+          const mod = await import('npm:resend@2');
+          const Resend = (mod as any).Resend || (mod as any).default || mod;
+          const resend = new Resend(RESEND_API_KEY);
+          await resend.emails.send({
+            from: 'Bhakthas <onboarding@resend.dev>',
+            to: [target],
+            subject: 'Your OTP code',
+            html: `<p>Your OTP code is <strong>${code}</strong>. It expires in 5 minutes.</p>`,
+          });
+        } catch (err: unknown) {
+          console.error('Resend send error', err);
+          console.warn('Resend import/send failed; OTP:', code);
+        }
       }
     } else {
       // phone via Twilio
@@ -73,7 +92,7 @@ serve(async (req: Request) => {
         await fetch(url, {
           method: 'POST',
           headers: {
-            Authorization: `Basic ${btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`)}`,
+            Authorization: `Basic ${base64(`${TWILIO_SID}:${TWILIO_TOKEN}`)}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: bodyForm.toString(),
@@ -81,9 +100,10 @@ serve(async (req: Request) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
-  } catch (err) {
+    return new (globalThis as any).Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+  } catch (err: unknown) {
     console.error(err);
-    return new Response(JSON.stringify({ error: err.message || String(err) }), { status: 500, headers: corsHeaders });
+    const message = err instanceof Error ? err.message : String(err);
+    return new (globalThis as any).Response(JSON.stringify({ error: message }), { status: 500, headers: corsHeaders });
   }
 });
