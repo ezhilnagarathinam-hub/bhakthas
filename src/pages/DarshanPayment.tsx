@@ -27,6 +27,8 @@ const DarshanPayment = () => {
   const { toast } = useToast();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'razorpay'>('upi');
+  const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY as string | undefined;
 
   useEffect(() => {
     if (bookingId) {
@@ -76,7 +78,96 @@ const DarshanPayment = () => {
         return;
       }
 
-      // Generate UPI payment link for paid darshan
+      if (paymentMethod === 'razorpay' && RAZORPAY_KEY) {
+        // Try to open Razorpay checkout
+        const loadScript = (src: string) => new Promise<boolean>((resolve) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+        const ok = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+        if (!ok || !(window as any).Razorpay) {
+          toast({
+            title: 'Payment Unavailable',
+            description: 'Unable to load Razorpay. Falling back to UPI payment.',
+            duration: 5000,
+          });
+        } else {
+          const options = {
+            key: RAZORPAY_KEY,
+            amount: Math.round(amount * 100), // paise
+            currency: 'INR',
+            name: booking.temples.name,
+            description: `Darshan ${booking.invoice_number}`,
+            prefill: {
+              name: booking.customer_name,
+            },
+            handler: function (response: any) {
+                (async () => {
+                  try {
+                    // store payment receipt in booking's bhaktha_details
+                    const { data: existing, error: fetchErr } = await supabase
+                      .from('darshan_bookings')
+                      .select('bhaktha_details')
+                      .eq('id', bookingId)
+                      .single();
+
+                    if (fetchErr) throw fetchErr;
+
+                    const details = existing?.bhaktha_details || {};
+                    details.payment_receipt = response;
+
+                    await supabase
+                      .from('darshan_bookings')
+                      .update({ bhaktha_details: details })
+                      .eq('id', bookingId);
+
+                    // send email via edge function (if available)
+                    try {
+                      await supabase.functions.invoke('send-order-status-email', {
+                        body: JSON.stringify({
+                          customerEmail: booking.customer_name ? booking.customer_email : booking.customer_email,
+                          customerName: booking.customer_name,
+                          orderId: booking.id,
+                          productName: 'Darshan Booking',
+                          status: 'payment_completed',
+                          totalPrice: amount,
+                        }),
+                      });
+                    } catch (e) {
+                      console.warn('Email send failed:', e);
+                    }
+
+                    toast({
+                      title: 'Payment Success',
+                      description: 'Payment completed. Admin will verify and confirm your booking.',
+                    });
+                    navigate(`/darshan/ticket/${bookingId}`);
+                  } catch (err) {
+                    console.error('Error recording payment:', err);
+                    toast({ title: 'Payment recorded failed', description: 'But payment might have gone through.' });
+                    navigate(`/darshan/ticket/${bookingId}`);
+                  }
+                })();
+            },
+            modal: {
+              ondismiss: function () {
+                toast({ title: 'Payment Cancelled', description: 'You cancelled the payment.' });
+              }
+            }
+          } as any;
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback / UPI payment flow
       const upiId = "temple@upi"; // Replace with actual temple UPI ID
       const upiLink = `upi://pay?pa=${upiId}&pn=Temple Darshan&am=${amount}&cu=INR&tn=Darshan ${booking.invoice_number}`;
       
@@ -195,17 +286,41 @@ const DarshanPayment = () => {
               <CardContent className="p-4">
                 <h4 className="font-semibold mb-3">Payment Methods</h4>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-background rounded-lg border border-primary/20">
-                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xl">📱</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold">UPI Payment</p>
-                      <p className="text-xs text-muted-foreground">Pay via Google Pay, PhonePe, Paytm</p>
+                  <div
+                    className={`cursor-pointer p-3 rounded-lg border ${paymentMethod === 'upi' ? 'border-primary bg-primary/5' : 'border-primary/10 bg-background'}`}
+                    onClick={() => setPaymentMethod('upi')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-xl">📱</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">UPI Payment</p>
+                        <p className="text-xs text-muted-foreground">Pay via Google Pay, PhonePe, Paytm</p>
+                      </div>
                     </div>
                   </div>
+
+                  <div
+                    className={`cursor-pointer p-3 rounded-lg border ${paymentMethod === 'razorpay' ? 'border-primary bg-primary/5' : 'border-primary/10 bg-background'}`}
+                    onClick={() => setPaymentMethod('razorpay')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-xl">💳</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Card / Netbanking (Razorpay)</p>
+                        <p className="text-xs text-muted-foreground">Cards, Netbanking, Wallets via Razorpay</p>
+                      </div>
+                    </div>
+                    {!RAZORPAY_KEY && (
+                      <p className="text-xs text-yellow-700 mt-2">Razorpay not configured — will fallback to UPI</p>
+                    )}
+                  </div>
+
                   <div className="text-center text-sm text-muted-foreground p-2">
-                    You'll be redirected to your UPI app to complete payment
+                    {paymentMethod === 'razorpay' ? 'You will be redirected to Razorpay checkout (if configured).' : "You'll be redirected to your UPI app to complete payment."}
                   </div>
                 </div>
               </CardContent>
@@ -222,7 +337,7 @@ const DarshanPayment = () => {
                 ? "Processing..." 
                 : booking.amount_paid === 0 
                   ? "Submit Free Darshan Booking"
-                  : "Pay with UPI"
+                  : (paymentMethod === 'razorpay' ? 'Pay with Razorpay' : 'Pay with UPI')
               }
             </Button>
             

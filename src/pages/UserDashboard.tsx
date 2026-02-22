@@ -13,6 +13,7 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [templeVisits, setTempleVisits] = useState<any[]>([]);
   const [bhakthiScore, setBhakthiScore] = useState(0);
   const navigate = useNavigate();
   const {
@@ -33,6 +34,14 @@ const UserDashboard = () => {
         }
         setUser(session.user);
         fetchUserData(session.user.id);
+        try {
+          const { data: reports } = await supabase.from('user_reports').select('*').eq('user_id', session.user.id).is('resolved_at', null).limit(1);
+          if (reports && reports.length > 0) {
+            setUser((u: any) => ({ ...u, reported: true }));
+          }
+        } catch (rErr) {
+          console.warn('Could not check user reports', rErr);
+        }
       } catch (error) {
         console.error('Auth check error:', error);
         setLoading(false);
@@ -66,6 +75,20 @@ const UserDashboard = () => {
       
       setOrders(ordersRes.data || []);
       setBookings(bookingsRes.data || []);
+      // fetch user's temple visits (selfies)
+      try {
+        const { data: visits } = await supabase.from('temple_visits').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(100);
+        setTempleVisits(visits || []);
+      } catch (vErr) {
+        console.warn('Could not fetch user temple visits', vErr);
+      }
+      // fetch user's uploaded images (user_images)
+      try {
+        const { data: uimgs } = await supabase.from('user_images').select('*').eq('user_id', userId).order('uploaded_at', { ascending: false }).limit(200);
+        if (uimgs) setTempleVisits(prev => [...prev, ...uimgs.map((ui:any) => ({ id: ui.id, photo_url: ui.url, user_id: ui.user_id, temple_id: ui.temple_id, visit_date: ui.uploaded_at }))]);
+      } catch (uiErr) {
+        console.warn('Could not fetch user_images for dashboard', uiErr);
+      }
       if (pointsRes.data) {
         setBhakthiScore(pointsRes.data.total_points || 0);
       }
@@ -74,6 +97,18 @@ const UserDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to resolve visitor_selfie which may be a string URL or an object with bucket/path
+  const resolveVisitorSelfieUrl = (visitorSelfie: any) => {
+    if (!visitorSelfie) return null;
+    if (typeof visitorSelfie === 'string') return visitorSelfie;
+    if (visitorSelfie.url) return visitorSelfie.url;
+    if (visitorSelfie.bucket && visitorSelfie.path) {
+      const { data } = supabase.storage.from(visitorSelfie.bucket).getPublicUrl(visitorSelfie.path);
+      return (data as any)?.publicUrl || null;
+    }
+    return null;
   };
   const getDiscountPercentage = () => {
     return Math.min(Math.floor(bhakthiScore / 1000 * 25), 25);
@@ -103,6 +138,27 @@ const UserDashboard = () => {
         </div>
       </div>;
   }
+  const imagesList = bookings.flatMap(b => {
+    const details = b.bhaktha_details || {};
+    const imgs: { id: string; url: string; label: string; invoice: string }[] = [];
+    const selfieUrl = resolveVisitorSelfieUrl(details.visitor_selfie);
+    if (selfieUrl) imgs.push({ id: b.id + '-selfie', url: selfieUrl, label: 'Visitor Selfie', invoice: b.invoice_number });
+    if (details.refund_receipt && details.refund_receipt.url) imgs.push({ id: b.id + '-refund', url: details.refund_receipt.url, label: 'Refund Receipt', invoice: b.invoice_number });
+    return imgs;
+  });
+  // include temple visit images
+  const visitImages = templeVisits.flatMap(v => v.photo_url ? [{ id: `visit-${v.id}`, url: v.photo_url, label: 'Temple Visit Selfie', invoice: v.visit_date }] : []);
+  if (user?.reported) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="rounded-lg border border-red-300 bg-red-50 p-8 text-center">
+          <h2 className="text-2xl font-bold text-red-700 mb-2">Your account is reported</h2>
+          <p className="text-sm text-red-600">Your account is reported, contact the team for support.</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
@@ -228,7 +284,7 @@ const UserDashboard = () => {
 
       {/* Detailed Information Tabs */}
       <Tabs defaultValue="bookings" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="bookings">
             <MapPin className="h-4 w-4 mr-2" />
             Darshan Bookings
@@ -236,6 +292,10 @@ const UserDashboard = () => {
           <TabsTrigger value="orders">
             <ShoppingBag className="h-4 w-4 mr-2" />
             Product Orders
+          </TabsTrigger>
+          <TabsTrigger value="images">
+            <MapPin className="h-4 w-4 mr-2" />
+            Images
           </TabsTrigger>
         </TabsList>
 
@@ -254,9 +314,14 @@ const UserDashboard = () => {
                         Invoice: {booking.invoice_number}
                       </p>
                     </div>
-                    <Badge className={getStatusColor(booking.status)}>
-                      {booking.status}
-                    </Badge>
+                      <div className="flex items-center gap-2">
+                        {booking.amount_paid > 0 && !(booking.bhaktha_details && (booking.bhaktha_details as any).payment_receipt) && booking.status !== 'confirmed' ? (
+                          <Badge className={getStatusColor('awaiting')}>Payment Incomplete</Badge>
+                        ) : (
+                          <Badge className={getStatusColor(booking.status)}>{booking.status}</Badge>
+                        )}
+                        <Button variant="ghost" onClick={() => navigate(`/darshan/ticket/${booking.id}`)}>View</Button>
+                      </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
@@ -281,6 +346,22 @@ const UserDashboard = () => {
                     </p>}
                 </CardContent>
               </Card>)}
+        </TabsContent>
+
+        <TabsContent value="images" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {([...(imagesList || []), ...(visitImages || [])].length > 0) ? ([...imagesList, ...visitImages].map(i => (
+                <div key={i.id} className="border rounded overflow-hidden">
+                  <img src={i.url} alt={i.label} className="w-full h-48 object-cover" />
+                  <div className="p-2 text-sm">
+                    <p className="font-medium">{i.label}</p>
+                    <p className="text-xs text-muted-foreground">Booking: {i.invoice}</p>
+                  </div>
+                </div>
+              ))) : (
+                <p className="text-muted-foreground">No images uploaded yet</p>
+              )}
+            </div>
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-4">

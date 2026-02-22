@@ -49,6 +49,7 @@ const DarshanBooking = () => {
   const [temple, setTemple] = useState<Temple | null>(null);
   const [packages, setPackages] = useState<DarshanPackage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("10:00");
@@ -60,6 +61,12 @@ const DarshanBooking = () => {
     email: "",
     phone: "",
   });
+  const [emailOtp, setEmailOtp] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
+  const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
   const totalPrice = selectedPackage ? selectedPackage.price * numberOfTickets : 0;
@@ -70,6 +77,18 @@ const DarshanBooking = () => {
       fetchTemple();
       fetchPackages();
     }
+    // check auth status for showing login alert
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session?.user);
+      } catch (err) {
+        console.error('Error checking auth session:', err);
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkAuth();
   }, [templeId]);
 
   const fetchTemple = async () => {
@@ -117,6 +136,47 @@ const DarshanBooking = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const sendOtp = async (target: string, type: 'email' | 'phone') => {
+    if (!target) return;
+    try {
+      if (type === 'email') setSendingEmailOtp(true);
+      else setSendingPhoneOtp(true);
+
+      const res = await supabase.functions.invoke('send-otp', {
+        body: JSON.stringify({ target, type }),
+      });
+
+      if (!res.ok) throw new Error('Failed to send OTP');
+
+      toast({ title: 'OTP Sent', description: `OTP sent to ${type}` });
+    } catch (err) {
+      console.error('sendOtp error', err);
+      toast({ title: 'Error', description: 'Failed to send OTP', variant: 'destructive' });
+    } finally {
+      setSendingEmailOtp(false);
+      setSendingPhoneOtp(false);
+    }
+  };
+
+  const verifyOtp = async (target: string, type: 'email' | 'phone', code: string) => {
+    try {
+      const res = await supabase.functions.invoke('verify-otp', {
+        body: JSON.stringify({ target, type, code }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        toast({ title: 'Verified', description: `${type} verified` });
+        if (type === 'email') setEmailVerified(true);
+        else setPhoneVerified(true);
+      } else {
+        toast({ title: 'Invalid OTP', description: json.reason || 'Invalid or expired OTP', variant: 'destructive' });
+      }
+    } catch (err) {
+      console.error('verifyOtp error', err);
+      toast({ title: 'Error', description: 'Failed to verify OTP', variant: 'destructive' });
+    }
+  };
+
   const handleTicketChange = (newCount: number) => {
     setNumberOfTickets(newCount);
     const updatedBhakthas = [...bhakthas];
@@ -148,6 +208,11 @@ const DarshanBooking = () => {
         description: "Please select darshan package and date",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!emailVerified || !phoneVerified) {
+      toast({ title: 'Verification required', description: 'Please verify your email and phone via OTP before booking', variant: 'destructive' });
       return;
     }
 
@@ -250,8 +315,13 @@ const DarshanBooking = () => {
         description: "Your booking is awaiting admin confirmation and payment verification",
       });
 
-      // Always go to payment page (even for free darshan, admin will verify)
-      navigate(`/darshan/payment/${booking.id}`);
+      // If this is a free darshan, go directly to the ticket/receipt page.
+      if (selectedPackage && selectedPackage.price === 0) {
+        navigate(`/darshan/ticket/${booking.id}`);
+      } else {
+        // For paid darshan, go to payment page
+        navigate(`/darshan/payment/${booking.id}`);
+      }
     } catch (error) {
       toast({
         title: "Booking failed",
@@ -283,6 +353,11 @@ const DarshanBooking = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isLoggedIn === false && (
+          <div className="mb-6 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 text-center">
+            kindly login to book your Darshan
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Darshan Package Selection */}
           <Card>
@@ -510,6 +585,17 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="your@email.com"
                 />
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    placeholder="Enter OTP"
+                    value={emailOtp}
+                    onChange={(e) => setEmailOtp(e.target.value)}
+                    className="w-36"
+                  />
+                  <Button size="sm" onClick={() => sendOtp(formData.email, 'email')} disabled={sendingEmailOtp}>Send OTP</Button>
+                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.email, 'email', emailOtp)}>Verify</Button>
+                  {emailVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
@@ -521,6 +607,17 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="10-digit mobile number"
                 />
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    placeholder="Enter OTP"
+                    value={phoneOtp}
+                    onChange={(e) => setPhoneOtp(e.target.value)}
+                    className="w-36"
+                  />
+                  <Button size="sm" onClick={() => sendOtp(formData.phone, 'phone')} disabled={sendingPhoneOtp}>Send OTP</Button>
+                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.phone, 'phone', phoneOtp)}>Verify</Button>
+                  {phoneVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
+                </div>
               </div>
             </CardContent>
           </Card>

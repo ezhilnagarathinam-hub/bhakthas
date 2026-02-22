@@ -38,11 +38,15 @@ interface Booking {
 const DarshanBookingManagement = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [view, setView] = useState<'list' | 'images'>('list');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [templeFilter, setTempleFilter] = useState("all");
   const [temples, setTemples] = useState<string[]>([]);
+  const [templeVisits, setTempleVisits] = useState<any[]>([]);
+  const [userImages, setUserImages] = useState<any[]>([]);
+  const [activeReports, setActiveReports] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +73,27 @@ const DarshanBookingManagement = () => {
 
       if (error) throw error;
       setBookings(data.bookings || []);
+      // Fetch recent temple visits to show in images view too
+      try {
+        const { data: visits } = await supabase.from('temple_visits').select('*').order('created_at', { ascending: false }).limit(200);
+        setTempleVisits(visits || []);
+      } catch (vErr) {
+        console.warn('Could not fetch temple visits for admin images view', vErr);
+      }
+      // Fetch recent user_images
+      try {
+        const { data: images } = await supabase.from('user_images').select('*').order('uploaded_at', { ascending: false }).limit(500);
+        setUserImages(images || []);
+      } catch (iErr) {
+        console.warn('Could not fetch user_images', iErr);
+      }
+      // Fetch active reports
+      try {
+        const { data: reports } = await supabase.from('user_reports').select('*').is('resolved_at', null).order('reported_at', { ascending: false });
+        setActiveReports(reports || []);
+      } catch (rErr) {
+        console.warn('Could not fetch user_reports', rErr);
+      }
       
       const uniqueTemples = [...new Set(data.bookings?.map((b: Booking) => b.temples?.name).filter(Boolean))] as string[];
       setTemples(uniqueTemples);
@@ -139,6 +164,31 @@ const DarshanBookingManagement = () => {
         description: "Failed to update booking status",
         variant: "destructive",
       });
+    }
+  };
+
+  const uploadRefundReceipt = async (bookingId: string, file: File | null, note?: string) => {
+    if (!file) return;
+    try {
+      const key = `refund-receipts/${bookingId}/${Date.now()}_${file.name}`;
+      const { data: uploadData, error: uploadErr } = await supabase.storage.from('refund-receipts').upload(key, file, { cacheControl: '3600', upsert: false });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('refund-receipts').getPublicUrl(key);
+      const publicUrl = urlData.publicUrl;
+
+      // attach to booking, merge with existing bhaktha_details
+      const { data: existing, error: fetchErr } = await supabase.from('darshan_bookings').select('bhaktha_details').eq('id', bookingId).single();
+      if (fetchErr) throw fetchErr;
+      const details = existing?.bhaktha_details || {};
+      details.refund_receipt = { url: publicUrl, note, uploaded_at: new Date().toISOString() };
+      const { error: updateErr } = await supabase.from('darshan_bookings').update({ bhaktha_details: details }).eq('id', bookingId);
+      if (updateErr) throw updateErr;
+
+      toast({ title: 'Uploaded', description: 'Refund receipt uploaded' });
+      fetchBookings();
+    } catch (err) {
+      console.error('Refund upload error', err);
+      toast({ title: 'Upload failed', description: 'Could not upload refund receipt', variant: 'destructive' });
     }
   };
 
@@ -224,66 +274,158 @@ const DarshanBookingManagement = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden border border-border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice</TableHead>
-              <TableHead>Temple</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Tickets</TableHead>
-              <TableHead>Darshan Type</TableHead>
-              <TableHead>Date & Time</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBookings.map((booking) => (
-              <TableRow key={booking.id}>
-                <TableCell className="font-mono text-xs">
-                  {booking.invoice_number}
-                </TableCell>
-                <TableCell>{booking.temples?.name}</TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="font-medium">{booking.customer_name}</p>
-                    <p className="text-xs text-muted-foreground">{booking.customer_email}</p>
-                    <p className="text-xs text-muted-foreground">{booking.customer_phone}</p>
+        {view === 'images' ? (
+          <div className="p-6">
+            {/* Active reports list */}
+            {activeReports.length > 0 && (
+              <div className="mb-4 p-4 border rounded bg-red-50">
+                <h4 className="font-semibold mb-2">Active Reports</h4>
+                <div className="space-y-2">
+                  {activeReports.map(r => (
+                    <div key={r.id} className="flex items-center justify-between">
+                      <div className="text-sm">Reported user: {r.user_id} — image: {r.image_id || 'N/A'}</div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="destructive" onClick={async () => {
+                          if (!confirm('Are you sure you want to release this reported account?')) return;
+                          try {
+                            const { error } = await supabase.from('user_reports').update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id }).eq('id', r.id);
+                            if (error) throw error;
+                            toast({ title: 'Released', description: 'Report has been released' });
+                            fetchBookings();
+                          } catch (err) {
+                            toast({ title: 'Error', description: 'Could not release report', variant: 'destructive' });
+                          }
+                        }}>Release</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* booking images */}
+              {bookings.flatMap(b => {
+                const details = b.bhaktha_details || {};
+                const imgs: any[] = [];
+                const selfie = details.visitor_selfie;
+                let selfieUrl = null as string | null;
+                if (selfie) {
+                  if (typeof selfie === 'string') selfieUrl = selfie;
+                  else if (selfie.url) selfieUrl = selfie.url;
+                  else if (selfie.bucket && selfie.path) {
+                    const { data } = supabase.storage.from(selfie.bucket).getPublicUrl(selfie.path);
+                    selfieUrl = (data as any)?.publicUrl || null;
+                  }
+                }
+                if (selfieUrl) imgs.push({ id: b.id + '-selfie', url: selfieUrl, label: 'Visitor Selfie', userId: b.customer_email || 'N/A', templeId: b.temples?.name || '' });
+                if (details.refund_receipt && details.refund_receipt.url) imgs.push({ id: b.id + '-refund', url: details.refund_receipt.url, label: 'Refund Receipt', userId: b.customer_email || 'N/A', templeId: b.temples?.name || '' });
+                return imgs;
+              })
+              // user uploaded images table
+              .concat(userImages.map(ui => ({ id: ui.id, url: ui.url, label: 'User Image', userId: ui.user_id, templeId: ui.temple_id })))
+              // temple visits
+              .concat(templeVisits.map(v => ({ id: `visit-${v.id}`, url: v.photo_url, label: 'Temple Visit Selfie', userId: v.user_id, templeId: v.temple_id })))
+              .map(i => (
+                <div key={i.id} className="border rounded overflow-hidden">
+                  <img src={i.url} alt={i.label} className="w-full h-48 object-cover" />
+                  <div className="p-2 text-sm flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{i.label}</p>
+                      <p className="text-xs text-muted-foreground">User: {i.userId} — Temple: {i.templeId}</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button size="sm" variant="destructive" onClick={async () => {
+                        // Double confirmation
+                        if (!confirm('Report this user for this image? This will mark the account reported.')) return;
+                        const reason = prompt('Optional: provide a reason for reporting this user');
+                        try {
+                          const adminUser = (await supabase.auth.getUser()).data.user;
+                          const { error } = await supabase.from('user_reports').insert({ user_id: i.userId, reported_by: adminUser?.id, image_id: i.id, reason });
+                          if (error) throw error;
+                          toast({ title: 'Reported', description: 'User has been reported' });
+                          fetchBookings();
+                        } catch (err) {
+                          console.error('Report error', err);
+                          toast({ title: 'Error', description: 'Could not report user', variant: 'destructive' });
+                        }
+                      }}>Report</Button>
+                      <Button size="sm" variant="outline" onClick={() => window.open(i.url, '_blank')}>Open</Button>
+                    </div>
                   </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{booking.number_of_tickets || 1}</Badge>
-                </TableCell>
-                <TableCell>{getDarshanLabel(booking.darshan_type)}</TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p>{format(new Date(booking.darshan_date), "PPP")}</p>
-                    <p className="text-sm text-muted-foreground">{booking.darshan_time}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="font-semibold">₹{booking.amount_paid}</TableCell>
-                <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                <TableCell>
-                  <Select
-                    value={booking.status}
-                    onValueChange={(value) => updateStatus(booking.id, value as "awaiting" | "confirmed" | "cancelled" | "refunded")}
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="awaiting">Awaiting</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Temple</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Tickets</TableHead>
+                <TableHead>Darshan Type</TableHead>
+                <TableHead>Date & Time</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredBookings.map((booking) => (
+                <TableRow key={booking.id}>
+                  <TableCell className="font-mono text-xs">
+                    {booking.invoice_number}
+                  </TableCell>
+                  <TableCell>{booking.temples?.name}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">{booking.customer_name}</p>
+                      <p className="text-xs text-muted-foreground">{booking.customer_email}</p>
+                      <p className="text-xs text-muted-foreground">{booking.customer_phone}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{booking.number_of_tickets || 1}</Badge>
+                  </TableCell>
+                  <TableCell>{getDarshanLabel(booking.darshan_type)}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p>{format(new Date(booking.darshan_date), "PPP")}</p>
+                      <p className="text-sm text-muted-foreground">{booking.darshan_time}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-semibold">₹{booking.amount_paid}</TableCell>
+                  <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-2">
+                      <Select
+                        value={booking.status}
+                        onValueChange={(value) => updateStatus(booking.id, value as "awaiting" | "confirmed" | "cancelled" | "refunded")}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="awaiting">Awaiting</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {(booking.status === 'cancelled' || booking.status === 'refunded') && (
+                        <div className="flex items-center gap-2">
+                          <input type="file" onChange={(e) => uploadRefundReceipt(booking.id, e.target.files ? e.target.files[0] : null)} />
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       {filteredBookings.length === 0 && (

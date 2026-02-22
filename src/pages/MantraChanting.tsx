@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Play, Pause, RotateCcw, Mic, MicOff, Sparkles, BookOpen, Heart, Share2, Download } from "lucide-react";
+import { jsPDF } from 'jspdf';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -139,6 +140,70 @@ const MantraChanting = () => {
     }
   };
 
+  const generateMantraSheet = (mantra: Mantra) => {
+    try {
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 40;
+
+      // Header
+      doc.setFontSize(18);
+      doc.setTextColor(40, 40, 40);
+      doc.text('Bhakthas', margin, 50);
+
+      // Watermark (light, large, rotated)
+      doc.setFontSize(72);
+      doc.setTextColor(200);
+      // Center coordinates
+      const cx = pageWidth / 2;
+      const cy = 420;
+      // Using angle option for rotated watermark
+      doc.text('bhakthas', cx, cy, { align: 'center', angle: -30 });
+
+      // Title and contents
+      doc.setFontSize(22);
+      doc.setTextColor(20, 20, 20);
+      doc.text(mantra.title || 'Mantra', margin, 120);
+
+      let y = 150;
+      doc.setFontSize(14);
+      const lineHeight = 18;
+
+      if (mantra.sanskrit_text) {
+        const lines = doc.splitTextToSize(mantra.sanskrit_text, pageWidth - margin * 2);
+        doc.text(lines, margin, y);
+        y += lines.length * lineHeight + 10;
+      }
+
+      if (mantra.transliteration) {
+        const lines = doc.splitTextToSize(mantra.transliteration, pageWidth - margin * 2);
+        doc.setFontSize(12);
+        doc.text(lines, margin, y);
+        y += lines.length * lineHeight + 8;
+      }
+
+      if (mantra.translation) {
+        const lines = doc.splitTextToSize(mantra.translation, pageWidth - margin * 2);
+        doc.setFontSize(12);
+        doc.text(lines, margin, y);
+        y += lines.length * lineHeight + 8;
+      }
+
+      // Footer
+      doc.setFontSize(10);
+      doc.setTextColor(120);
+      const footerText = '© Bhakthas';
+      doc.text(footerText, margin, doc.internal.pageSize.getHeight() - 40);
+
+      const safeTitle = (mantra.title || 'mantra').replace(/[^a-z0-9-_]/gi, '_').toLowerCase();
+      doc.save(`${safeTitle}.pdf`);
+      toast({ title: 'Sheet Downloaded', description: `Saved ${mantra.title} sheet` });
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast({ title: 'Download Failed', description: 'Could not generate mantra sheet', variant: 'destructive' });
+    }
+  };
+
   const presetTargets = [9, 108, 1008];
 
   useEffect(() => {
@@ -152,26 +217,49 @@ const MantraChanting = () => {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+      // prefer user's browser language, fallback to en-US
+      recognitionRef.current.lang = navigator.language || 'en-US';
 
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        const mantraKeywords = ['om', 'aum', 'namah', 'hare', 'krishna', 'rama', 'shiva', 'ganesha'];
-        const hasMantraWord = mantraKeywords.some(keyword => transcript.includes(keyword));
-        
-        if (hasMantraWord && count < target) {
-          setCount(prev => {
-            const newCount = prev + 1;
-            if (newCount === target) {
-              handleCompletion();
-            }
-            return newCount;
-          });
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onresult = (event: any) => {
+        try {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          const mantraKeywords = ['om', 'aum', 'namah', 'hare', 'krishna', 'rama', 'shiva', 'ganesha'];
+          const hasMantraWord = mantraKeywords.some(keyword => transcript.includes(keyword));
+
+          if (hasMantraWord && count < target) {
+            setCount(prev => {
+              const newCount = prev + 1;
+              if (newCount === target) {
+                handleCompletion();
+              }
+              return newCount;
+            });
+          }
+        } catch (err) {
+          console.error('Speech onresult error', err);
         }
       };
 
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+      recognitionRef.current.onend = () => {
+        // Some browsers stop recognition after a short time — auto-restart if user is still listening
+        if (recognitionRef.current && isListening) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            // ignore start errors
+          }
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error || event);
+        toast({ title: 'Speech Recognition Error', description: String(event.error || 'Unknown error'), variant: 'destructive' });
         setIsListening(false);
       };
     }
@@ -252,11 +340,41 @@ const MantraChanting = () => {
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.warn('Error stopping recognition', e);
+      }
       setIsListening(false);
+      return;
+    }
+
+    // Request mic permission first to avoid silent failures on some browsers
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+          } catch (err) {
+            console.error('Recognition start error:', err);
+            toast({ title: 'Could not start recognition', description: String(err), variant: 'destructive' });
+            setIsListening(false);
+          }
+        })
+        .catch((err) => {
+          console.error('Microphone permission denied', err);
+          toast({ title: 'Microphone Permission', description: 'Please allow microphone access to use voice chant', variant: 'destructive' });
+          setIsListening(false);
+        });
     } else {
-      recognitionRef.current.start();
-      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Recognition start error (no getUserMedia):', err);
+        toast({ title: 'Could not start recognition', description: String(err), variant: 'destructive' });
+      }
     }
   };
 
@@ -356,6 +474,16 @@ const MantraChanting = () => {
                             <Download className="h-3 w-3" />
                           </Button>
                         )}
+                        {/* Download sheet/PDF */}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 rounded-full bg-gradient-sacred text-white hover:opacity-80"
+                          onClick={(e) => { e.stopPropagation(); generateMantraSheet(mantra); }}
+                          title="Download Sheet"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleFavorite(mantra.id); }}>
                           <Heart className={`h-3 w-3 ${isFavorite(mantra.id) ? 'fill-red-500 text-red-500' : ''}`} />
                         </Button>

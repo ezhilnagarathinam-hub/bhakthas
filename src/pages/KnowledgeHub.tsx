@@ -357,9 +357,14 @@ const KnowledgeHub = () => {
                       </Button>
                     </div>
                     <CardContent className="p-6 space-y-4">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-gradient-sacred rounded-full flex items-center justify-center shadow-sacred">
+                            <span className="text-white text-lg">🕉️</span>
+                          </div>
+                        </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors pr-16">
+                          <h3 className="text-lg font-bold text-primary group-hover:text-secondary transition-colors">
                             {temple.name}
                           </h3>
                           {temple.city && temple.state && (
@@ -368,11 +373,6 @@ const KnowledgeHub = () => {
                               {temple.city}, {temple.state}
                             </p>
                           )}
-                        </div>
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-gradient-sacred rounded-full flex items-center justify-center shadow-sacred">
-                            <span className="text-white text-lg">🕉️</span>
-                          </div>
                         </div>
                       </div>
                       

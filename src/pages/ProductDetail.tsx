@@ -27,6 +27,7 @@ const ProductDetail = () => {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
+  const [availableStock, setAvailableStock] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,6 +57,26 @@ const ProductDetail = () => {
       }
 
       setProduct(data);
+      // compute purchases for this product and available stock
+      if (data && data.id && data.stock !== null) {
+        try {
+          const { data: ordersData, error: ordersError } = await supabase
+            .from('orders')
+            .select('quantity')
+            .eq('product_id', data.id)
+            .neq('status', 'cancelled');
+
+          if (ordersError) throw ordersError;
+
+          const purchased = (ordersData || []).reduce((s: number, o: any) => s + (o.quantity || 0), 0);
+          setAvailableStock((data.stock ?? 0) - purchased);
+        } catch (err) {
+          console.error('Error fetching orders for availability:', err);
+          setAvailableStock(null);
+        }
+      } else {
+        setAvailableStock(null);
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast({
@@ -169,11 +190,16 @@ const ProductDetail = () => {
               
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-4xl font-bold text-primary">₹{product.price}</span>
-                {product.stock !== null && product.stock > 0 && (
-                  <Badge variant="secondary">In Stock: {product.stock}</Badge>
-                )}
-                {product.stock !== null && product.stock === 0 && (
-                  <Badge variant="destructive">Out of Stock</Badge>
+                {product.stock !== null && (
+                  availableStock !== null ? (
+                    availableStock > 0 ? (
+                      <Badge variant="secondary">In Stock</Badge>
+                    ) : (
+                      <Badge variant="destructive">Out of Stock</Badge>
+                    )
+                  ) : (
+                    <Badge variant="secondary">Checking availability...</Badge>
+                  )
                 )}
               </div>
             </div>
@@ -220,7 +246,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-1"
                   onClick={handleBuyNow}
-                  disabled={product.stock === 0}
+                  disabled={product.stock !== null ? (availableStock !== null ? availableStock === 0 : product.stock === 0) : false}
                 >
                   Buy Now
                 </Button>
@@ -229,7 +255,7 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-1"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={product.stock !== null ? (availableStock !== null ? availableStock === 0 : product.stock === 0) : false}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart

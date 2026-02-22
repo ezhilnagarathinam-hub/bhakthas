@@ -32,6 +32,8 @@ const DarshanTicket = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (bookingId) {
@@ -84,6 +86,97 @@ const DarshanTicket = () => {
     }
   };
 
+  const handleSelfieUpload = async (file: File | null) => {
+    if (!file || !booking) return;
+    setUploading(true);
+    try {
+      let key = `darshan-selfies/${booking.id}/${Date.now()}_${file.name}`;
+
+      // Try to upload (use upsert: true to avoid conflicts)
+      let uploadBucket = 'darshan-selfies';
+      let publicUrl: string | null = null;
+      try {
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from(uploadBucket)
+          .upload(key, file, { cacheControl: '3600', upsert: true });
+
+        if (uploadErr) {
+          console.error('Upload error details (primary):', uploadErr);
+          // if bucket missing, try fallback
+          if ((uploadErr as any)?.status === 404 || (uploadErr as any)?.message?.toLowerCase?.().includes('bucket')) {
+            // fallback to central `images` bucket if available
+            uploadBucket = 'images';
+            const fallbackKey = `darshan-selfies-fallback/${booking.id}/${Date.now()}_${file.name}`;
+            const { data: fbData, error: fbErr } = await supabase.storage.from(uploadBucket).upload(fallbackKey, file, { cacheControl: '3600', upsert: true });
+            if (fbErr) {
+              console.error('Fallback upload error:', fbErr);
+              throw new Error("Neither 'darshan-selfies' nor fallback 'images' bucket available. Create the buckets in Supabase storage.");
+            }
+            // use fallback public url
+            const { data: urlData } = supabase.storage.from(uploadBucket).getPublicUrl(fallbackKey);
+            publicUrl = (urlData as any)?.publicUrl || null;
+            // replace key for storing metadata
+            key = fallbackKey;
+          } else {
+            throw uploadErr;
+          }
+        } else {
+          const { data: urlData } = supabase.storage.from(uploadBucket).getPublicUrl(key);
+          publicUrl = (urlData as any)?.publicUrl || null;
+        }
+      } catch (uErr: any) {
+        throw uErr;
+      }
+
+      // attach to bhaktha_details; prefer storing bucket/path so we can resolve later
+      const { data: existing, error: fetchErr } = await supabase
+        .from('darshan_bookings')
+        .select('bhaktha_details')
+        .eq('id', booking.id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+
+      const details = existing?.bhaktha_details || {};
+      details.visitor_selfie = {
+        bucket: uploadBucket,
+        path: key,
+        url: publicUrl,
+      };
+
+      const { error: updateErr } = await supabase
+        .from('darshan_bookings')
+        .update({ bhaktha_details: details })
+        .eq('id', booking.id);
+
+      if (updateErr) throw updateErr;
+
+      // Also record in central user_images table to allow admin listing
+      try {
+        await supabase.from('user_images').insert({
+          user_id: (booking as any).user_id || null,
+          temple_id: booking.temple_id,
+          bucket: uploadBucket,
+          path: key,
+          url: publicUrl,
+          filename: file.name
+        });
+      } catch (uErr) {
+        console.warn('Could not insert user_images record for darshan selfie:', uErr);
+      }
+
+      // update local state to reflect new selfie immediately
+      setSelfieUrl(publicUrl || URL.createObjectURL(file));
+      setBooking(prev => prev ? { ...prev, bhaktha_details: details } as any : prev);
+      toast({ title: 'Uploaded', description: 'Selfie uploaded. Thank you!' });
+    } catch (err: any) {
+      console.error('Selfie upload error:', err);
+      toast({ title: 'Upload failed', description: err?.message || 'Could not upload selfie', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!booking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -132,6 +225,7 @@ const DarshanTicket = () => {
   };
 
   const isPastDarshan = new Date(booking.darshan_date) < new Date();
+  const paymentRecorded = !!(booking.bhaktha_details && (booking.bhaktha_details as any).payment_receipt);
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,6 +329,48 @@ const DarshanTicket = () => {
               </Card>
             )}
 
+            {booking.status === 'cancelled' || booking.status === 'refunded' ? (
+              // Show refund receipt if provided by admin
+              <Card className="bg-muted/10 border-border">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">This booking has been {booking.status}.</p>
+                  {((booking.bhaktha_details as any)?.refund_receipt) ? (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium">Refund Proof / Receipt</p>
+                      <a href={(booking.bhaktha_details as any).refund_receipt.url} target="_blank" rel="noreferrer" className="text-primary underline">View Refund Receipt</a>
+                      {((booking.bhaktha_details as any).refund_receipt.note) && (
+                        <p className="text-sm text-muted-foreground">Note: {(booking.bhaktha_details as any).refund_receipt.note}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-2">No refund receipt uploaded yet.</p>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              // For non-cancelled bookings: allow selfie upload only for confirmed bookings when date has passed
+              isPastDarshan && booking.status === 'confirmed' && (
+                <Card className="bg-muted/10 border-border">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground">This booking date has passed.</p>
+                    {!((booking.bhaktha_details as any)?.visitor_selfie) ? (
+                      <div className="mt-3">
+                        <p className="text-sm mb-2">If you visited the temple, please upload a selfie with the temple to mark this visit.</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleSelfieUpload(e.target.files ? e.target.files[0] : null)}
+                          disabled={uploading}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-green-600">Selfie uploaded. Thank you for confirming your visit.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            )}
+
             <div className="flex gap-4">
               <Button
                 onClick={() => navigate("/darshan")}
@@ -243,13 +379,28 @@ const DarshanTicket = () => {
               >
                 Book Another Darshan
               </Button>
-              <Button
-                onClick={() => window.print()}
-                variant="sacred"
-                className="flex-1"
-              >
-                Print Ticket
-              </Button>
+              {((paymentRecorded) || booking.status === "confirmed" || booking.amount_paid === 0) ? (
+                <Button
+                  onClick={() => window.print()}
+                  variant="sacred"
+                  className="flex-1"
+                >
+                  {booking.status === "confirmed" ? "Print Ticket" : "Receipt"}
+                </Button>
+              ) : (
+                <div className="flex-1">
+                  <div className="p-4 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 text-center">
+                    Payment is incomplete, Retry again in user dashboard page
+                  </div>
+                  <Button
+                    onClick={() => navigate(`/darshan/payment/${booking.id}`)}
+                    variant="outline"
+                    className="w-full mt-3"
+                  >
+                    Retry Payment
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

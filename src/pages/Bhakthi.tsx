@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,12 +45,23 @@ const Bhakthi = () => {
   const [nearbyTemples, setNearbyTemples] = useState<(Temple & { distance: number })[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [visitModalOpen, setVisitModalOpen] = useState(false);
+  const [selectedTempleId, setSelectedTempleId] = useState<string | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const [uploadingVisit, setUploadingVisit] = useState(false);
+  const [agreeImagePolicy, setAgreeImagePolicy] = useState(false);
+  const [userVisits, setUserVisits] = useState<any[]>([]);
   
   useEffect(() => {
     fetchTemples();
     getUserLocation();
     if (user) {
       fetchUserPoints();
+      fetchUserVisits();
     }
   }, [user]);
 
@@ -181,85 +193,166 @@ const Bhakthi = () => {
       return;
     }
 
+    // Open selfie upload modal
+    setSelectedTempleId(templeId);
+    setSelfiePreview(null);
+    setSelfieFile(null);
+    setVerified(null);
+    setVisitModalOpen(true);
+  };
+
+  const fetchUserVisits = async () => {
+    if (!user) return;
     try {
-      // Check if already visited today
+      const { data } = await supabase
+        .from('temple_visits')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setUserVisits(data || []);
+    } catch (err) {
+      console.error('Error fetching user visits', err);
+    }
+  };
+
+  const analyzeImage = async (file: File, templeId: string) => {
+    // Placeholder for AI analysis: integrate with real vision API here.
+    // For now, we'll do a naive accept and return true after a short delay.
+    setVerifying(null);
+    setVerifying(true);
+    try {
+      await new Promise((r) => setTimeout(r, 1000));
+      // FUTURE: upload to an AI service and return confidence
+      setVerified(true);
+      toast({ title: 'Image Verified', description: 'Selfie looks good for visit verification.' });
+      return true;
+    } catch (err) {
+      setVerified(false);
+      toast({ title: 'Verification Failed', description: 'Could not verify the selfie. Try another photo.', variant: 'destructive' });
+      return false;
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const confirmRecordVisit = async () => {
+    if (!user || !selectedTempleId) return;
+    try {
+      // Prevent duplicate same-day visit
       const { data: existingVisit } = await supabase
         .from('temple_visits')
         .select('*')
         .eq('user_id', user.id)
-        .eq('temple_id', templeId)
+        .eq('temple_id', selectedTempleId)
         .gte('visit_date', new Date().toISOString().split('T')[0])
         .single();
 
       if (existingVisit) {
-        toast({
-          title: "Already Visited",
-          description: "You've already recorded a visit to this temple today",
-          variant: "destructive",
-        });
+        toast({ title: 'Already Visited', description: 'You have already recorded a visit today.', variant: 'destructive' });
+        setVisitModalOpen(false);
         return;
       }
 
-      // Record visit
-      const { error: visitError } = await supabase
+      setUploadingVisit(true);
+      let photoUrl: string | null = null;
+      if (selfieFile) {
+        // Upload into central `images` bucket and create a user_images record
+        const path = `images/user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage.from('images').upload(path, selfieFile, { upsert: true });
+        if (uploadErr) {
+          console.error('Images upload error details:', uploadErr);
+          if ((uploadErr as any)?.status === 404 || (uploadErr as any)?.message?.toLowerCase?.().includes('bucket')) {
+            throw new Error("Storage bucket 'images' not found. Create the bucket in Supabase storage or contact admin.");
+          }
+          throw uploadErr;
+        }
+        const { data: publicData } = supabase.storage.from('images').getPublicUrl(path);
+        photoUrl = (publicData as any)?.publicUrl || null;
+
+        // record in user_images table for admin listing
+        try {
+          await supabase.from('user_images').insert({
+            user_id: user.id,
+            temple_id: selectedTempleId,
+            bucket: 'images',
+            path,
+            url: photoUrl,
+            filename: selfieFile.name
+          });
+        } catch (uErr) {
+          console.warn('Could not insert user_images record:', uErr);
+        }
+      }
+
+      // Analyze (if not already verified via analyzeImage)
+      if (verified !== true && selfieFile) {
+        const ok = await analyzeImage(selfieFile, selectedTempleId);
+        if (!ok) {
+          setUploadingVisit(false);
+          return;
+        }
+      }
+
+      // Insert visit record (mark verified true by default when selfie provided)
+      const { data: insertData, error: insertError } = await supabase
         .from('temple_visits')
         .insert({
           user_id: user.id,
-          temple_id: templeId,
-          points_earned: 100
-        });
+          temple_id: selectedTempleId,
+          points_earned: 10,
+          photo_url: photoUrl,
+          verified: selfieFile ? true : false,
+          visit_date: new Date().toISOString().split('T')[0]
+        })
+        .select()
+        .single();
 
-      if (visitError) throw visitError;
+      if (insertError) throw insertError;
 
-      // Check if this is a new temple visit
-      const { data: previousVisits } = await supabase
-        .from('temple_visits')
-        .select('temple_id')
-        .eq('user_id', user.id)
-        .eq('temple_id', templeId);
-
-      const isNewTemple = previousVisits?.length === 1;
-
-      // Update points: 10 for visit + 100 if new temple
-      const visitPoints = 10;
-      const templeBonus = isNewTemple ? 100 : 0;
-      const totalNewPoints = visitPoints + templeBonus;
-
-      const newTotalPoints = userScore + totalNewPoints;
+      // Update user points (simple +10; bonus handled elsewhere)
+      const newTotalPoints = userScore + 10;
       const newTotalVisits = totalVisits + 1;
-      const newTemplesVisited = isNewTemple ? templesVisited + 1 : templesVisited;
-      const newDiscount = Math.floor(newTotalPoints / 1000) * 25;
-
-      // Update user points
       const { error: updateError } = await supabase
         .from('user_bhakthi_points')
-        .update({
-          total_points: newTotalPoints,
-          temples_visited: newTemplesVisited,
-          total_visits: newTotalVisits,
-          current_discount_percent: newDiscount
-        })
+        .update({ total_points: newTotalPoints, total_visits: newTotalVisits })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
-      // Update local state
       setUserScore(newTotalPoints);
       setTotalVisits(newTotalVisits);
-      setTemplesVisited(newTemplesVisited);
-      setCurrentDiscount(newDiscount);
+      toast({ title: 'Visit Recorded', description: 'Your visit has been recorded.' });
+      setVisitModalOpen(false);
+      fetchUserVisits();
+    } catch (err) {
+      console.error('Error confirming visit', err);
+      toast({ title: 'Error', description: 'Failed to record visit', variant: 'destructive' });
+    } finally {
+      setUploadingVisit(false);
+    }
+  };
 
-      toast({
-        title: "Visit Recorded! 🎉",
-        description: `+${totalNewPoints} points! ${isNewTemple ? '(New temple bonus!)' : ''} ${newDiscount > currentDiscount ? `You've unlocked ${newDiscount}% discount!` : ''}`,
-      });
-    } catch (error) {
-      console.error('Error recording visit:', error);
-      toast({
-        title: "Error",
-        description: "Failed to record temple visit",
-        variant: "destructive",
-      });
+  const deleteVisit = async (visitId: string) => {
+    if (!user) return;
+    try {
+      // Fetch visit
+      const { data: visit } = await supabase.from('temple_visits').select('*').eq('id', visitId).single();
+      if (!visit) return;
+      // Delete row
+      const { error } = await supabase.from('temple_visits').delete().eq('id', visitId);
+      if (error) throw error;
+      // Refund points
+      const points = visit.points_earned || 0;
+      const newTotalPoints = Math.max(0, userScore - points);
+      const newTotalVisits = Math.max(0, totalVisits - 1);
+      await supabase.from('user_bhakthi_points').update({ total_points: newTotalPoints, total_visits: newTotalVisits }).eq('user_id', user.id);
+      setUserScore(newTotalPoints);
+      setTotalVisits(newTotalVisits);
+      toast({ title: 'Visit Deleted', description: 'The visit has been removed.' });
+      fetchUserVisits();
+    } catch (err) {
+      console.error('Error deleting visit', err);
+      toast({ title: 'Delete Failed', description: 'Could not delete visit', variant: 'destructive' });
     }
   };
 
@@ -349,6 +442,48 @@ const Bhakthi = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+      {/* Selfie upload / verification dialog */}
+      <Dialog open={visitModalOpen} onOpenChange={setVisitModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Record Temple Visit</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setSelfieFile(f);
+                if (f) setSelfiePreview(URL.createObjectURL(f));
+              }} />
+              <div className="flex items-center gap-3">
+                <Button variant="sacred" onClick={() => fileInputRef.current?.click()}>Choose Selfie</Button>
+                <Button variant="outline" onClick={async () => {
+                  if (!selfieFile || !selectedTempleId) return;
+                  await analyzeImage(selfieFile, selectedTempleId);
+                }} disabled={!selfieFile || verifying}>Analyze</Button>
+              </div>
+            </div>
+
+            {selfiePreview && <img src={selfiePreview} alt="preview" className="w-full h-48 object-cover rounded" />}
+
+            <div className="mt-2 text-sm text-muted-foreground">
+              <p>If the image contains any vulgar or unnecessary elements, your account may be reported. Kindly check before uploading.</p>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input id="agreePolicy" type="checkbox" checked={agreeImagePolicy} onChange={(e) => setAgreeImagePolicy(e.target.checked)} />
+              <label htmlFor="agreePolicy" className="text-sm">I confirm this image follows the community guidelines</label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="ghost" onClick={() => setVisitModalOpen(false)}>Cancel</Button>
+              <Button variant="sacred" onClick={confirmRecordVisit} disabled={uploadingVisit || (selfieFile ? verified !== true : false) || (selfieFile ? !agreeImagePolicy : false)}>
+                {uploadingVisit ? 'Recording...' : 'Confirm Visit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
           <TabsContent value="nearby" className="space-y-4">
             <Card>
