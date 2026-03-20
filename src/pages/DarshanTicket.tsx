@@ -225,7 +225,7 @@ const DarshanTicket = () => {
   };
 
   const isPastDarshan = new Date(booking.darshan_date) < new Date();
-  const paymentRecorded = !!(booking.bhaktha_details && (booking.bhaktha_details as any).payment_receipt);
+  const paymentRecorded = !!((booking as any).bhaktha_details && ((booking as any).bhaktha_details as any).payment_receipt);
 
   return (
     <div className="min-h-screen bg-background">
