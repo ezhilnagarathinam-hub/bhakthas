@@ -288,7 +288,7 @@ const DarshanBookingManagement = () => {
                         <Button size="sm" variant="destructive" onClick={async () => {
                           if (!confirm('Are you sure you want to release this reported account?')) return;
                           try {
-                            const { error } = await supabase.from('user_reports').update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id }).eq('id', r.id);
+                            const { error } = await (supabase as any).from('user_reports').update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id }).eq('id', r.id);
                             if (error) throw error;
                             toast({ title: 'Released', description: 'Report has been released' });
                             fetchBookings();
