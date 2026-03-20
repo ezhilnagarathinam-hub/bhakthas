@@ -84,7 +84,7 @@ const UserDashboard = () => {
       }
       // fetch user's uploaded images (user_images)
       try {
-        const { data: uimgs } = await supabase.from('user_images').select('*').eq('user_id', userId).order('uploaded_at', { ascending: false }).limit(200);
+        const { data: uimgs } = await (supabase as any).from('user_images').select('*').eq('user_id', userId).order('uploaded_at', { ascending: false }).limit(200);
         if (uimgs) setTempleVisits(prev => [...prev, ...uimgs.map((ui:any) => ({ id: ui.id, photo_url: ui.url, user_id: ui.user_id, temple_id: ui.temple_id, visit_date: ui.uploaded_at }))]);
       } catch (uiErr) {
         console.warn('Could not fetch user_images for dashboard', uiErr);

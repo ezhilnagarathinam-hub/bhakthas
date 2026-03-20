@@ -274,13 +274,13 @@ const TempleDetail = () => {
                       if (!temple) return;
                       // Try to persist to `temple_settings` table; if table missing, fallback to warning
                       try {
-                        const { data: upsertData, error: upsertError } = await supabase
+                        const { data: upsertData, error: upsertError } = await (supabase as any)
                           .from('temple_settings')
                           .upsert({ temple_id: temple.id, video_enabled: !!val }, { onConflict: 'temple_id' });
 
                         if (upsertError) {
                           // Table likely doesn't exist — notify admin
-                          toast({ title: 'Toggle Saved Locally', description: 'Create `temple_settings` table to persist this setting. Falling back to local UI only.', variant: 'warning' });
+                          toast({ title: 'Toggle Saved Locally', description: 'Create `temple_settings` table to persist this setting. Falling back to local UI only.', variant: 'destructive' });
                         } else {
                           toast({ title: 'Setting Updated', description: `Video space ${val ? 'enabled' : 'disabled'}` });
                         }
