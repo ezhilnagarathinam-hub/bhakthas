@@ -341,7 +341,7 @@ const DarshanBookingManagement = () => {
                         const reason = prompt('Optional: provide a reason for reporting this user');
                         try {
                           const adminUser = (await supabase.auth.getUser()).data.user;
-                          const { error } = await supabase.from('user_reports').insert({ user_id: i.userId, reported_by: adminUser?.id, image_id: i.id, reason });
+                          const { error } = await (supabase as any).from('user_reports').insert({ user_id: i.userId, reported_by: adminUser?.id, image_id: i.id, reason });
                           if (error) throw error;
                           toast({ title: 'Reported', description: 'User has been reported' });
                           fetchBookings();

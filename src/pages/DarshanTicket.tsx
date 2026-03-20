@@ -353,7 +353,7 @@ const DarshanTicket = () => {
                 <Card className="bg-muted/10 border-border">
                   <CardContent className="p-4">
                     <p className="text-sm text-muted-foreground">This booking date has passed.</p>
-                    {!((booking.bhaktha_details as any)?.visitor_selfie) ? (
+                    {!(((booking as any).bhaktha_details as any)?.visitor_selfie) ? (
                       <div className="mt-3">
                         <p className="text-sm mb-2">If you visited the temple, please upload a selfie with the temple to mark this visit.</p>
                         <input
