@@ -334,12 +334,12 @@ const DarshanTicket = () => {
               <Card className="bg-muted/10 border-border">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground">This booking has been {booking.status}.</p>
-                  {((booking.bhaktha_details as any)?.refund_receipt) ? (
+                  {(((booking as any).bhaktha_details as any)?.refund_receipt) ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-sm font-medium">Refund Proof / Receipt</p>
-                      <a href={(booking.bhaktha_details as any).refund_receipt.url} target="_blank" rel="noreferrer" className="text-primary underline">View Refund Receipt</a>
-                      {((booking.bhaktha_details as any).refund_receipt.note) && (
-                        <p className="text-sm text-muted-foreground">Note: {(booking.bhaktha_details as any).refund_receipt.note}</p>
+                      <a href={((booking as any).bhaktha_details as any).refund_receipt.url} target="_blank" rel="noreferrer" className="text-primary underline">View Refund Receipt</a>
+                      {(((booking as any).bhaktha_details as any).refund_receipt.note) && (
+                        <p className="text-sm text-muted-foreground">Note: {((booking as any).bhaktha_details as any).refund_receipt.note}</p>
                       )}
                     </div>
                   ) : (
