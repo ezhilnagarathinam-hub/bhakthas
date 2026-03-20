@@ -179,7 +179,7 @@ const DarshanBookingManagement = () => {
       // attach to booking, merge with existing bhaktha_details
       const { data: existing, error: fetchErr } = await supabase.from('darshan_bookings').select('bhaktha_details').eq('id', bookingId).single();
       if (fetchErr) throw fetchErr;
-      const details = existing?.bhaktha_details || {};
+      const details: any = existing?.bhaktha_details || {};
       details.refund_receipt = { url: publicUrl, note, uploaded_at: new Date().toISOString() };
       const { error: updateErr } = await supabase.from('darshan_bookings').update({ bhaktha_details: details }).eq('id', bookingId);
       if (updateErr) throw updateErr;
