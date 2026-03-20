@@ -117,7 +117,7 @@ const DarshanPayment = () => {
 
                     if (fetchErr) throw fetchErr;
 
-                    const details = existing?.bhaktha_details || {};
+                    const details: any = existing?.bhaktha_details || {};
                     details.payment_receipt = response;
 
                     await supabase
