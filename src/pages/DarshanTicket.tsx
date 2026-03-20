@@ -137,7 +137,7 @@ const DarshanTicket = () => {
 
       if (fetchErr) throw fetchErr;
 
-      const details = existing?.bhaktha_details || {};
+      const details: any = existing?.bhaktha_details || {};
       details.visitor_selfie = {
         bucket: uploadBucket,
         path: key,
@@ -153,7 +153,7 @@ const DarshanTicket = () => {
 
       // Also record in central user_images table to allow admin listing
       try {
-        await supabase.from('user_images').insert({
+        await (supabase as any).from('user_images').insert({
           user_id: (booking as any).user_id || null,
           temple_id: booking.temple_id,
           bucket: uploadBucket,
@@ -225,7 +225,7 @@ const DarshanTicket = () => {
   };
 
   const isPastDarshan = new Date(booking.darshan_date) < new Date();
-  const paymentRecorded = !!(booking.bhaktha_details && (booking.bhaktha_details as any).payment_receipt);
+  const paymentRecorded = !!((booking as any).bhaktha_details && ((booking as any).bhaktha_details as any).payment_receipt);
 
   return (
     <div className="min-h-screen bg-background">
@@ -334,12 +334,12 @@ const DarshanTicket = () => {
               <Card className="bg-muted/10 border-border">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground">This booking has been {booking.status}.</p>
-                  {((booking.bhaktha_details as any)?.refund_receipt) ? (
+                  {(((booking as any).bhaktha_details as any)?.refund_receipt) ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-sm font-medium">Refund Proof / Receipt</p>
-                      <a href={(booking.bhaktha_details as any).refund_receipt.url} target="_blank" rel="noreferrer" className="text-primary underline">View Refund Receipt</a>
-                      {((booking.bhaktha_details as any).refund_receipt.note) && (
-                        <p className="text-sm text-muted-foreground">Note: {(booking.bhaktha_details as any).refund_receipt.note}</p>
+                      <a href={((booking as any).bhaktha_details as any).refund_receipt.url} target="_blank" rel="noreferrer" className="text-primary underline">View Refund Receipt</a>
+                      {(((booking as any).bhaktha_details as any).refund_receipt.note) && (
+                        <p className="text-sm text-muted-foreground">Note: {((booking as any).bhaktha_details as any).refund_receipt.note}</p>
                       )}
                     </div>
                   ) : (
@@ -353,7 +353,7 @@ const DarshanTicket = () => {
                 <Card className="bg-muted/10 border-border">
                   <CardContent className="p-4">
                     <p className="text-sm text-muted-foreground">This booking date has passed.</p>
-                    {!((booking.bhaktha_details as any)?.visitor_selfie) ? (
+                    {!(((booking as any).bhaktha_details as any)?.visitor_selfie) ? (
                       <div className="mt-3">
                         <p className="text-sm mb-2">If you visited the temple, please upload a selfie with the temple to mark this visit.</p>
                         <input

@@ -80,16 +80,16 @@ const DarshanBookingManagement = () => {
       } catch (vErr) {
         console.warn('Could not fetch temple visits for admin images view', vErr);
       }
-      // Fetch recent user_images
+      // Fetch recent user_images (table may not exist yet)
       try {
-        const { data: images } = await supabase.from('user_images').select('*').order('uploaded_at', { ascending: false }).limit(500);
+        const { data: images } = await (supabase as any).from('user_images').select('*').order('uploaded_at', { ascending: false }).limit(500);
         setUserImages(images || []);
       } catch (iErr) {
         console.warn('Could not fetch user_images', iErr);
       }
-      // Fetch active reports
+      // Fetch active reports (table may not exist yet)
       try {
-        const { data: reports } = await supabase.from('user_reports').select('*').is('resolved_at', null).order('reported_at', { ascending: false });
+        const { data: reports } = await (supabase as any).from('user_reports').select('*').is('resolved_at', null).order('reported_at', { ascending: false });
         setActiveReports(reports || []);
       } catch (rErr) {
         console.warn('Could not fetch user_reports', rErr);
@@ -179,7 +179,7 @@ const DarshanBookingManagement = () => {
       // attach to booking, merge with existing bhaktha_details
       const { data: existing, error: fetchErr } = await supabase.from('darshan_bookings').select('bhaktha_details').eq('id', bookingId).single();
       if (fetchErr) throw fetchErr;
-      const details = existing?.bhaktha_details || {};
+      const details: any = existing?.bhaktha_details || {};
       details.refund_receipt = { url: publicUrl, note, uploaded_at: new Date().toISOString() };
       const { error: updateErr } = await supabase.from('darshan_bookings').update({ bhaktha_details: details }).eq('id', bookingId);
       if (updateErr) throw updateErr;
@@ -288,7 +288,7 @@ const DarshanBookingManagement = () => {
                         <Button size="sm" variant="destructive" onClick={async () => {
                           if (!confirm('Are you sure you want to release this reported account?')) return;
                           try {
-                            const { error } = await supabase.from('user_reports').update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id }).eq('id', r.id);
+                            const { error } = await (supabase as any).from('user_reports').update({ resolved_at: new Date().toISOString(), resolved_by: (await supabase.auth.getUser()).data.user?.id }).eq('id', r.id);
                             if (error) throw error;
                             toast({ title: 'Released', description: 'Report has been released' });
                             fetchBookings();
@@ -341,7 +341,7 @@ const DarshanBookingManagement = () => {
                         const reason = prompt('Optional: provide a reason for reporting this user');
                         try {
                           const adminUser = (await supabase.auth.getUser()).data.user;
-                          const { error } = await supabase.from('user_reports').insert({ user_id: i.userId, reported_by: adminUser?.id, image_id: i.id, reason });
+                          const { error } = await (supabase as any).from('user_reports').insert({ user_id: i.userId, reported_by: adminUser?.id, image_id: i.id, reason });
                           if (error) throw error;
                           toast({ title: 'Reported', description: 'User has been reported' });
                           fetchBookings();

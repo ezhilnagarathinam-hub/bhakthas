@@ -146,7 +146,7 @@ const DarshanBooking = () => {
         body: JSON.stringify({ target, type }),
       });
 
-      if (!res.ok) throw new Error('Failed to send OTP');
+      if (res.error) throw new Error('Failed to send OTP');
 
       toast({ title: 'OTP Sent', description: `OTP sent to ${type}` });
     } catch (err) {
@@ -163,7 +163,7 @@ const DarshanBooking = () => {
       const res = await supabase.functions.invoke('verify-otp', {
         body: JSON.stringify({ target, type, code }),
       });
-      const json = await res.json();
+      const json = res.data;
       if (json.ok) {
         toast({ title: 'Verified', description: `${type} verified` });
         if (type === 'email') setEmailVerified(true);

@@ -271,7 +271,7 @@ const Bhakthi = () => {
 
         // record in user_images table for admin listing
         try {
-          await supabase.from('user_images').insert({
+          await (supabase as any).from('user_images').insert({
             user_id: user.id,
             temple_id: selectedTempleId,
             bucket: 'images',

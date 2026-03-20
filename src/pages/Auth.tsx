@@ -102,15 +102,7 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const fillDemoCredentials = (type: 'admin' | 'user') => {
-    if (type === 'admin') {
-      setEmail('admin@temple.com');
-      setPassword('admin123');
-    } else {
-      setEmail('user@temple.com');
-      setPassword('user123');
-    }
-  };
+  // Demo buttons removed – use dedicated login credentials
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-mystic p-4">
@@ -163,29 +155,6 @@ const Auth = () => {
                   )}
                 </Button>
 
-                <div className="space-y-2 pt-4 border-t">
-                  <p className="text-sm text-muted-foreground text-center">Demo Accounts:</p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => fillDemoCredentials('admin')}
-                    >
-                      Admin Demo
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => fillDemoCredentials('user')}
-                    >
-                      User Demo
-                    </Button>
-                  </div>
-                </div>
               </form>
             </TabsContent>
 

@@ -117,7 +117,7 @@ const DarshanPayment = () => {
 
                     if (fetchErr) throw fetchErr;
 
-                    const details = existing?.bhaktha_details || {};
+                    const details: any = existing?.bhaktha_details || {};
                     details.payment_receipt = response;
 
                     await supabase
@@ -129,7 +129,7 @@ const DarshanPayment = () => {
                     try {
                       await supabase.functions.invoke('send-order-status-email', {
                         body: JSON.stringify({
-                          customerEmail: booking.customer_name ? booking.customer_email : booking.customer_email,
+                          customerEmail: (booking as any).customer_email || '',
                           customerName: booking.customer_name,
                           orderId: booking.id,
                           productName: 'Darshan Booking',

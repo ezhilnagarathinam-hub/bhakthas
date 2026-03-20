@@ -83,14 +83,14 @@ const TempleDetail = () => {
       setTemple(data);
       // Attempt to read override setting from `temple_settings` table (optional)
       try {
-        const { data: settingData, error: settingError } = await supabase
+        const { data: settingData, error: settingError } = await (supabase as any)
           .from('temple_settings')
           .select('video_enabled')
           .eq('temple_id', templeId)
           .maybeSingle();
 
-        if (!settingError && settingData && typeof settingData.video_enabled === 'boolean') {
-          setVideoEnabled(settingData.video_enabled);
+        if (!settingError && settingData && typeof (settingData as any).video_enabled === 'boolean') {
+          setVideoEnabled((settingData as any).video_enabled);
         } else {
           setVideoEnabled(Boolean(data.video_url));
         }
@@ -274,13 +274,13 @@ const TempleDetail = () => {
                       if (!temple) return;
                       // Try to persist to `temple_settings` table; if table missing, fallback to warning
                       try {
-                        const { data: upsertData, error: upsertError } = await supabase
+                        const { data: upsertData, error: upsertError } = await (supabase as any)
                           .from('temple_settings')
                           .upsert({ temple_id: temple.id, video_enabled: !!val }, { onConflict: 'temple_id' });
 
                         if (upsertError) {
                           // Table likely doesn't exist — notify admin
-                          toast({ title: 'Toggle Saved Locally', description: 'Create `temple_settings` table to persist this setting. Falling back to local UI only.', variant: 'warning' });
+                          toast({ title: 'Toggle Saved Locally', description: 'Create `temple_settings` table to persist this setting. Falling back to local UI only.', variant: 'destructive' });
                         } else {
                           toast({ title: 'Setting Updated', description: `Video space ${val ? 'enabled' : 'disabled'}` });
                         }
