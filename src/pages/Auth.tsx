@@ -155,29 +155,6 @@ const Auth = () => {
                   )}
                 </Button>
 
-                <div className="space-y-2 pt-4 border-t">
-                  <p className="text-sm text-muted-foreground text-center">Demo Accounts:</p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => fillDemoCredentials('admin')}
-                    >
-                      Admin Demo
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => fillDemoCredentials('user')}
-                    >
-                      User Demo
-                    </Button>
-                  </div>
-                </div>
               </form>
             </TabsContent>
 
