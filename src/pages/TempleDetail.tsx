@@ -83,14 +83,14 @@ const TempleDetail = () => {
       setTemple(data);
       // Attempt to read override setting from `temple_settings` table (optional)
       try {
-        const { data: settingData, error: settingError } = await supabase
+        const { data: settingData, error: settingError } = await (supabase as any)
           .from('temple_settings')
           .select('video_enabled')
           .eq('temple_id', templeId)
           .maybeSingle();
 
-        if (!settingError && settingData && typeof settingData.video_enabled === 'boolean') {
-          setVideoEnabled(settingData.video_enabled);
+        if (!settingError && settingData && typeof (settingData as any).video_enabled === 'boolean') {
+          setVideoEnabled((settingData as any).video_enabled);
         } else {
           setVideoEnabled(Boolean(data.video_url));
         }
