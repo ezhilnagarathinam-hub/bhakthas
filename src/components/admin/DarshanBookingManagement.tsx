@@ -80,16 +80,16 @@ const DarshanBookingManagement = () => {
       } catch (vErr) {
         console.warn('Could not fetch temple visits for admin images view', vErr);
       }
-      // Fetch recent user_images
+      // Fetch recent user_images (table may not exist yet)
       try {
-        const { data: images } = await supabase.from('user_images').select('*').order('uploaded_at', { ascending: false }).limit(500);
+        const { data: images } = await (supabase as any).from('user_images').select('*').order('uploaded_at', { ascending: false }).limit(500);
         setUserImages(images || []);
       } catch (iErr) {
         console.warn('Could not fetch user_images', iErr);
       }
-      // Fetch active reports
+      // Fetch active reports (table may not exist yet)
       try {
-        const { data: reports } = await supabase.from('user_reports').select('*').is('resolved_at', null).order('reported_at', { ascending: false });
+        const { data: reports } = await (supabase as any).from('user_reports').select('*').is('resolved_at', null).order('reported_at', { ascending: false });
         setActiveReports(reports || []);
       } catch (rErr) {
         console.warn('Could not fetch user_reports', rErr);
