@@ -102,15 +102,7 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const fillDemoCredentials = (type: 'admin' | 'user') => {
-    if (type === 'admin') {
-      setEmail('admin@temple.com');
-      setPassword('admin123');
-    } else {
-      setEmail('user@temple.com');
-      setPassword('user123');
-    }
-  };
+  // Demo buttons removed – use dedicated login credentials
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-mystic p-4">
