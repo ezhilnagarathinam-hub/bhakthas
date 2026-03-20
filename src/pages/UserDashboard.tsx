@@ -35,7 +35,7 @@ const UserDashboard = () => {
         setUser(session.user);
         fetchUserData(session.user.id);
         try {
-          const { data: reports } = await supabase.from('user_reports').select('*').eq('user_id', session.user.id).is('resolved_at', null).limit(1);
+          const { data: reports } = await (supabase as any).from('user_reports').select('*').eq('user_id', session.user.id).is('resolved_at', null).limit(1);
           if (reports && reports.length > 0) {
             setUser((u: any) => ({ ...u, reported: true }));
           }
