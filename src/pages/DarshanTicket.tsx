@@ -153,7 +153,7 @@ const DarshanTicket = () => {
 
       // Also record in central user_images table to allow admin listing
       try {
-        await supabase.from('user_images').insert({
+        await (supabase as any).from('user_images').insert({
           user_id: (booking as any).user_id || null,
           temple_id: booking.temple_id,
           bucket: uploadBucket,
