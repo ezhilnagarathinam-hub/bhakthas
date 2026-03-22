@@ -71,7 +71,7 @@ const Admin = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary my-0"></div>
       </div>);
 
   }
@@ -83,7 +83,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-admin font-poppins">
       <div className="bg-gradient-to-r from-red-900 via-red-800 to-yellow-700 border-b-2 border-yellow-500/50 shadow-glow animate-divine-shine" style={{ backgroundSize: '200% 200%' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 my-0">
           <div className="flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-3">
               <div className="animate-glow-pulse">
