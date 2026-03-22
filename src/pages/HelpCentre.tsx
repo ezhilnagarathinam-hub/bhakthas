@@ -20,8 +20,8 @@ const HelpCentre = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-2">Send us an email and we'll respond within 24 hours</p>
-              <a href="mailto:support@bhakthas.com" className="text-primary font-medium hover:underline">
-                support@bhakthas.com
+              <a href="mailto:bhakthasindia@gmail.com" className="text-primary font-medium hover:underline">
+                bhakthasindia@gmail.com
               </a>
             </CardContent>
           </Card>
@@ -35,8 +35,8 @@ const HelpCentre = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-2">Call us during business hours</p>
-              <a href="tel:+919876543210" className="text-primary font-medium hover:underline">
-                +91 98765 43210
+              <a href="tel:+916379247348" className="text-primary font-medium hover:underline">
+                +91 63792 47348
               </a>
             </CardContent>
           </Card>
@@ -51,7 +51,7 @@ const HelpCentre = () => {
             <CardContent>
               <p className="text-muted-foreground mb-2">Chat with us on WhatsApp</p>
               <a 
-                href="https://wa.me/919876543210" 
+                href="https://wa.me/916379247348" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary font-medium hover:underline"

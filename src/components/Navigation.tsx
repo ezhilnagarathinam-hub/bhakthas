@@ -74,12 +74,12 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+            <div className="ml-6 flex items-baseline space-x-1">
               {navItems.map(item => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              return <Link key={item.name} to={item.path} className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-sacred ${isActive ? "text-white bg-gradient-sacred shadow-sacred" : "text-foreground hover:text-primary hover:bg-primary/10"}`}>
-                    <Icon className="h-4 w-4" />
+              return <Link key={item.name} to={item.path} className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-sacred ${isActive ? "text-white bg-gradient-sacred shadow-sacred" : "text-foreground hover:text-primary hover:bg-primary/10"}`}>
+                    <Icon className="h-3.5 w-3.5" />
                     <span>{item.name}</span>
                   </Link>;
             })}
