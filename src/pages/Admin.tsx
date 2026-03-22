@@ -200,6 +200,14 @@ const Admin = () => {
             <PromoCodeManagement />
           </TabsContent>
 
+          <TabsContent value="blog">
+            <BlogManagement />
+          </TabsContent>
+
+          <TabsContent value="community">
+            <CommunityLinkManagement />
+          </TabsContent>
+
           <TabsContent value="users">
             <UserManagement />
           </TabsContent>
