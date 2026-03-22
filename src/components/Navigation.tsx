@@ -53,6 +53,10 @@ const Navigation = () => {
     name: "Mantra Chanting",
     path: "/mantra",
     icon: () => <span className="text-lg">🕉️</span>
+  }, {
+    name: "Challenges",
+    path: "/challenges",
+    icon: Trophy
   }];
   return <nav className="bg-background/90 backdrop-blur-md border-b-2 border-primary/20 sticky top-0 z-50 shadow-sacred font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
