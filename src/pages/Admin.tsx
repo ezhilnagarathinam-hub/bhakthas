@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart, Upload, Ticket, Trophy, Heart } from "lucide-react";
+import { Shield, Package, MapPin, BookOpen, Users, ShoppingBag, BarChart, Upload, Ticket, Trophy, Heart, FileText, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ProductManagement from "@/components/admin/ProductManagement";
@@ -16,6 +16,8 @@ import ReportDownload from "@/components/admin/ReportDownload";
 import PromoCodeManagement from "@/components/admin/PromoCodeManagement";
 import VolunteerManagement from "@/components/admin/VolunteerManagement";
 import ChallengeManagement from "@/components/admin/ChallengeManagement";
+import BlogManagement from "@/components/admin/BlogManagement";
+import CommunityLinkManagement from "@/components/admin/CommunityLinkManagement";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
