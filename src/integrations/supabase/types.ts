@@ -352,6 +352,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email_verified: boolean
+          full_name: string
+          id: string
+          location: string | null
+          phone: string
+          phone_verified: boolean
+          referral_source: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_verified?: boolean
+          full_name?: string
+          id?: string
+          location?: string | null
+          phone?: string
+          phone_verified?: boolean
+          referral_source?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_verified?: boolean
+          full_name?: string
+          id?: string
+          location?: string | null
+          phone?: string
+          phone_verified?: boolean
+          referral_source?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       promo_codes: {
         Row: {
           code: string

@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload } from "lucide-react";
+import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload, Heart, Swords } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import VolunteerDialog from "@/components/VolunteerDialog";
 const UserDashboard = () => {
+  const [volunteerOpen, setVolunteerOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
@@ -170,10 +172,20 @@ const UserDashboard = () => {
             Welcome back, {user?.email?.split('@')[0]}!
           </p>
         </div>
-        <Button onClick={() => navigate('/contribute')} className="bg-gradient-sacred hover:opacity-90">
-          <Upload className="w-4 h-4 mr-2" />
-          Contribute Temple
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => navigate('/contribute')} className="bg-gradient-sacred hover:opacity-90">
+            <Upload className="w-4 h-4 mr-2" />
+            Contribute Temple
+          </Button>
+          <Button onClick={() => setVolunteerOpen(true)} variant="outline" className="border-primary/30 hover:bg-primary/10">
+            <Heart className="w-4 h-4 mr-2" />
+            Volunteer
+          </Button>
+          <Button onClick={() => navigate('/challenges')} variant="outline" className="border-primary/30 hover:bg-primary/10">
+            <Swords className="w-4 h-4 mr-2" />
+            Challenges
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -407,6 +419,7 @@ const UserDashboard = () => {
               </Card>)}
         </TabsContent>
       </Tabs>
+      <VolunteerDialog open={volunteerOpen} onOpenChange={setVolunteerOpen} />
     </div>;
 };
 export default UserDashboard;

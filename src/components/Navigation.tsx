@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield } from "lucide-react";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
@@ -53,6 +53,10 @@ const Navigation = () => {
     name: "Mantra Chanting",
     path: "/mantra",
     icon: () => <span className="text-lg">🕉️</span>
+  }, {
+    name: "Challenges",
+    path: "/challenges",
+    icon: Trophy
   }];
   return <nav className="bg-background/90 backdrop-blur-md border-b-2 border-primary/20 sticky top-0 z-50 shadow-sacred font-poppins">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

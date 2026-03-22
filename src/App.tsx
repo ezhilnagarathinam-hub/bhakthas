@@ -23,6 +23,7 @@ import AuthLayout from "./pages/AuthLayout";
 import UserDashboardLayout from "./pages/UserDashboardLayout";
 import ContributeLayout from "./pages/ContributeLayout";
 import NotFound from "./pages/NotFound";
+import Challenges from "./pages/Challenges";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import DeliveryReturns from "./pages/DeliveryReturns";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/contribute" element={<ContributeLayout />} />
             <Route path="/admin" element={<AdminLayout />} />
             <Route path="/auth" element={<AuthLayout />} />
+            <Route path="/challenges" element={<Challenges />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/delivery-returns" element={<DeliveryReturns />} />
