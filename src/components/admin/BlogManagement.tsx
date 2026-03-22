@@ -80,7 +80,7 @@ const BlogManagement = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await uploadFile(file, "temple-images");
+    const url = await uploadFile(file);
     if (url) setForm({ ...form, image_url: url });
   };
 
