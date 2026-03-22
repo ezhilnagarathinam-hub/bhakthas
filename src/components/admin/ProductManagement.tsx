@@ -166,7 +166,7 @@ const ProductManagement = () => {
   };
 
   return (
-    <Card>
+    <Card className="my-[109px]">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Product Management</CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
