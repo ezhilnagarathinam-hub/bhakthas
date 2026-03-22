@@ -59,6 +59,7 @@ const App = () => (
             <Route path="/contribute" element={<ContributeLayout />} />
             <Route path="/admin" element={<AdminLayout />} />
             <Route path="/auth" element={<AuthLayout />} />
+            <Route path="/challenges" element={<Challenges />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/delivery-returns" element={<DeliveryReturns />} />
