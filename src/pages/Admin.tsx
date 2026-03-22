@@ -105,49 +105,57 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid grid-cols-4 lg:grid-cols-11 gap-2 bg-gradient-to-r from-red-950 to-yellow-950 border-2 border-yellow-600/30 p-2 shadow-divine">
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart className="w-4 h-4" />
+          <TabsList className="grid grid-cols-4 lg:grid-cols-13 gap-1 bg-gradient-to-r from-red-950 to-yellow-950 border-2 border-yellow-600/30 p-1.5 shadow-divine">
+            <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs px-2">
+              <BarChart className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
+            <TabsTrigger value="products" className="flex items-center gap-1 text-xs px-2">
+              <Package className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Products</span>
             </TabsTrigger>
-            <TabsTrigger value="temples" className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+            <TabsTrigger value="temples" className="flex items-center gap-1 text-xs px-2">
+              <MapPin className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Temples</span>
             </TabsTrigger>
-            <TabsTrigger value="mantras" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
+            <TabsTrigger value="mantras" className="flex items-center gap-1 text-xs px-2">
+              <BookOpen className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Mantras</span>
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4" />
+            <TabsTrigger value="orders" className="flex items-center gap-1 text-xs px-2">
+              <ShoppingBag className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
-            <TabsTrigger value="darshan" className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+            <TabsTrigger value="darshan" className="flex items-center gap-1 text-xs px-2">
+              <MapPin className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Darshan</span>
             </TabsTrigger>
-            <TabsTrigger value="contributions" className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Contributions</span>
+            <TabsTrigger value="contributions" className="flex items-center gap-1 text-xs px-2">
+              <Upload className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Contrib.</span>
             </TabsTrigger>
-            <TabsTrigger value="volunteers" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
+            <TabsTrigger value="volunteers" className="flex items-center gap-1 text-xs px-2">
+              <Heart className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Volunteers</span>
             </TabsTrigger>
-            <TabsTrigger value="challenges" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
+            <TabsTrigger value="challenges" className="flex items-center gap-1 text-xs px-2">
+              <Trophy className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Challenges</span>
             </TabsTrigger>
-            <TabsTrigger value="promos" className="flex items-center gap-2">
-              <Ticket className="w-4 h-4" />
-              <span className="hidden sm:inline">Promo Codes</span>
+            <TabsTrigger value="blog" className="flex items-center gap-1 text-xs px-2">
+              <FileText className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Blog</span>
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+            <TabsTrigger value="community" className="flex items-center gap-1 text-xs px-2">
+              <Link2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Community</span>
+            </TabsTrigger>
+            <TabsTrigger value="promos" className="flex items-center gap-1 text-xs px-2">
+              <Ticket className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Promos</span>
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-1 text-xs px-2">
+              <Users className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Users</span>
             </TabsTrigger>
           </TabsList>
