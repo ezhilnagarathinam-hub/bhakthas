@@ -10,6 +10,7 @@ import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload, Heart, Swords }
 import { useToast } from "@/hooks/use-toast";
 import VolunteerDialog from "@/components/VolunteerDialog";
 const UserDashboard = () => {
+  const [volunteerOpen, setVolunteerOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
