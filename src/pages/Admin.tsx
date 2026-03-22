@@ -32,18 +32,18 @@ const Admin = () => {
   const checkAdminAccess = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         navigate('/');
         return;
       }
 
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
+      const { data: roleData } = await supabase.
+      from('user_roles').
+      select('role').
+      eq('user_id', user.id).
+      eq('role', 'admin').
+      single();
 
       if (!roleData) {
         toast({
@@ -72,8 +72,8 @@ const Admin = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!isAdmin) {
@@ -161,7 +161,7 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="analytics">
-            <Analytics />
+            <Analytics className="my-[106px]" />
           </TabsContent>
 
           <TabsContent value="products">
@@ -213,8 +213,8 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Admin;

@@ -58,9 +58,9 @@ const ChallengeManagement = () => {
 
   const fetchData = async () => {
     const [challengesRes, submissionsRes] = await Promise.all([
-      supabase.from('challenges').select('*').order('created_at', { ascending: false }),
-      supabase.from('challenge_submissions').select('*, challenges(*)').order('created_at', { ascending: false })
-    ]);
+    supabase.from('challenges').select('*').order('created_at', { ascending: false }),
+    supabase.from('challenge_submissions').select('*, challenges(*)').order('created_at', { ascending: false })]
+    );
 
     if (challengesRes.data) setChallenges(challengesRes.data);
     if (submissionsRes.data) setSubmissions(submissionsRes.data);
@@ -69,7 +69,7 @@ const ChallengeManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -132,18 +132,18 @@ const ChallengeManagement = () => {
     setDialogOpen(true);
   };
 
-  const filteredSubmissions = submissions.filter(s => {
+  const filteredSubmissions = submissions.filter((s) => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         s.email.toLowerCase().includes(searchTerm.toLowerCase());
+    s.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed': return <Badge className="bg-green-500"><Check className="w-3 h-3 mr-1" />Completed</Badge>;
-      case 'rejected': return <Badge className="bg-red-500"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
-      default: return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+      case 'completed':return <Badge className="bg-green-500"><Check className="w-3 h-3 mr-1" />Completed</Badge>;
+      case 'rejected':return <Badge className="bg-red-500"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
+      default:return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
     }
   };
 
@@ -160,12 +160,12 @@ const ChallengeManagement = () => {
 
       <TabsContent value="challenges">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between mx-[2px] my-[2px]">
             <CardTitle className="flex items-center gap-2">
               <Trophy className="w-5 h-5" />
               Manage Challenges
             </CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => {setDialogOpen(open);if (!open) resetForm();}}>
               <DialogTrigger asChild>
                 <Button><Plus className="w-4 h-4 mr-2" />Add Challenge</Button>
               </DialogTrigger>
@@ -213,8 +213,8 @@ const ChallengeManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {challenges.map((challenge) => (
-                    <TableRow key={challenge.id}>
+                  {challenges.map((challenge) =>
+                  <TableRow key={challenge.id}>
                       <TableCell className="font-medium">{challenge.title}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{challenge.description}</TableCell>
                       <TableCell>{challenge.reward || '-'}</TableCell>
@@ -235,7 +235,7 @@ const ChallengeManagement = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -281,8 +281,8 @@ const ChallengeManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSubmissions.map((submission) => (
-                    <TableRow key={submission.id}>
+                  {filteredSubmissions.map((submission) =>
+                  <TableRow key={submission.id}>
                       <TableCell className="font-medium">{submission.name}</TableCell>
                       <TableCell>
                         <div className="text-sm">
@@ -305,22 +305,22 @@ const ChallengeManagement = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
-                  {filteredSubmissions.length === 0 && (
-                    <TableRow>
+                  )}
+                  {filteredSubmissions.length === 0 &&
+                  <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No submissions found
                       </TableCell>
                     </TableRow>
-                  )}
+                  }
                 </TableBody>
               </Table>
             </div>
           </CardContent>
         </Card>
       </TabsContent>
-    </Tabs>
-  );
+    </Tabs>);
+
 };
 
 export default ChallengeManagement;

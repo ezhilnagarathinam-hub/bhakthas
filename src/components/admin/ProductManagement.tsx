@@ -42,34 +42,34 @@ const ProductManagement = () => {
   }, [products, searchTerm, categoryFilter]);
 
   const fetchProducts = async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.
+    from('products').
+    select('*').
+    order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setProducts(data || []);
-      const uniqueCategories = [...new Set(data?.map(p => p.category).filter(Boolean))] as string[];
+      const uniqueCategories = [...new Set(data?.map((p) => p.category).filter(Boolean))] as string[];
       setCategories(uniqueCategories);
     }
   };
 
   const filterProducts = () => {
     let filtered = [...products];
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter((product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(product => product.category === categoryFilter);
+      filtered = filtered.filter((product) => product.category === categoryFilter);
     }
-    
+
     setFilteredProducts(filtered);
   };
 
@@ -95,10 +95,10 @@ const ProductManagement = () => {
     };
 
     if (editingProduct) {
-      const { error } = await supabase
-        .from('products')
-        .update(productData)
-        .eq('id', editingProduct.id);
+      const { error } = await supabase.
+      from('products').
+      update(productData).
+      eq('id', editingProduct.id);
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -108,9 +108,9 @@ const ProductManagement = () => {
         resetForm();
       }
     } else {
-      const { error } = await supabase
-        .from('products')
-        .insert([productData]);
+      const { error } = await supabase.
+      from('products').
+      insert([productData]);
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -138,10 +138,10 @@ const ProductManagement = () => {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.
+    from('products').
+    delete().
+    eq('id', id);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -171,7 +171,7 @@ const ProductManagement = () => {
         <CardTitle>Product Management</CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="sacred" onClick={() => { resetForm(); }}>
+            <Button variant="sacred" onClick={() => {resetForm();}}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
@@ -187,16 +187,16 @@ const ProductManagement = () => {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+                  required />
+                
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -207,8 +207,8 @@ const ProductManagement = () => {
                     step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    required
-                  />
+                    required />
+                  
                 </div>
                 <div>
                   <Label htmlFor="stock">Stock</Label>
@@ -217,8 +217,8 @@ const ProductManagement = () => {
                     type="number"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    required
-                  />
+                    required />
+                  
                 </div>
               </div>
               <div>
@@ -226,8 +226,8 @@ const ProductManagement = () => {
                 <Input
                   id="category"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
+                
               </div>
               <div>
                 <Label htmlFor="image">Product Image</Label>
@@ -237,29 +237,29 @@ const ProductManagement = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    className="flex-1"
-                  />
+                    className="flex-1" />
+                  
                   {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                 </div>
-                {dimensions && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                {dimensions &&
+                <p className="text-sm text-muted-foreground mt-1">
                     Image dimensions: {dimensions.width}x{dimensions.height}px
                   </p>
-                )}
-                {formData.image_url && !imageFile && (
-                  <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
-                )}
+                }
+                {formData.image_url && !imageFile &&
+                <img src={formData.image_url} alt="Current" className="mt-2 h-20 w-20 object-cover rounded" />
+                }
               </div>
               <div className="flex gap-2">
                 <Button type="submit" variant="sacred" disabled={uploading}>
-                  {uploading ? (
-                    <>
+                  {uploading ?
+                  <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Uploading...
-                    </>
-                  ) : (
-                    <>{editingProduct ? 'Update' : 'Create'} Product</>
-                  )}
+                    </> :
+
+                  <>{editingProduct ? 'Update' : 'Create'} Product</>
+                  }
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancel
@@ -269,7 +269,7 @@ const ProductManagement = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-[21px] mx-[12px]">
         <div className="flex gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -277,8 +277,8 @@ const ProductManagement = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+              className="pl-10" />
+            
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px]">
@@ -286,9 +286,9 @@ const ProductManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
+              {categories.map((cat) =>
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -303,8 +303,8 @@ const ProductManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.map((product) => (
-              <TableRow key={product.id}>
+            {filteredProducts.map((product) =>
+            <TableRow key={product.id}>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell>₹{product.price}</TableCell>
@@ -318,15 +318,15 @@ const ProductManagement = () => {
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
-        {filteredProducts.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">No products found</p>
-        )}
+        {filteredProducts.length === 0 &&
+        <p className="text-center text-muted-foreground py-8">No products found</p>
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
 
 export default ProductManagement;
