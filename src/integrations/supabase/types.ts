@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       challenge_submissions: {
         Row: {
           challenge_id: string | null
@@ -91,6 +127,36 @@ export type Database = {
           reward?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      community_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          platform: string | null
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: string | null
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: string | null
+          title?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
