@@ -419,6 +419,7 @@ const UserDashboard = () => {
               </Card>)}
         </TabsContent>
       </Tabs>
+      <VolunteerDialog open={volunteerOpen} onOpenChange={setVolunteerOpen} />
     </div>;
 };
 export default UserDashboard;
