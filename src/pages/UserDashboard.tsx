@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload } from "lucide-react";
+import { Trophy, ShoppingBag, MapPin, Star, Award, Gift, Upload, Heart, Swords } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import VolunteerDialog from "@/components/VolunteerDialog";
 const UserDashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
