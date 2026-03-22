@@ -18,8 +18,7 @@ const BlogManagement = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<any>(null);
   const [form, setForm] = useState({ title: "", content: "", excerpt: "", category: "", image_url: "", is_published: false });
-  const { uploading, uploadFile } = useFileUpload();
-
+  const { uploading, uploadFile } = useFileUpload("temple-images");
   const { data: blogs, isLoading } = useQuery({
     queryKey: ["admin-blogs"],
     queryFn: async () => {
