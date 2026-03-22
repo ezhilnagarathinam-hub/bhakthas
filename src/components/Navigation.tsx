@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield } from "lucide-react";
+import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";

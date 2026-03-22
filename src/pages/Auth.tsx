@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+  const [referralSource, setReferralSource] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -19,7 +24,6 @@ const Auth = () => {
   useEffect(() => {
     const checkUserAndRedirect = async (session: any) => {
       if (session) {
-        // Check if user is admin
         const { data } = await supabase
           .from("user_roles")
           .select("role")
@@ -35,7 +39,6 @@ const Auth = () => {
       }
     };
 
-    // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       checkUserAndRedirect(session);
     });
@@ -51,9 +54,13 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!fullName.trim() || !phone.trim()) {
+      toast({ title: "Missing Fields", description: "Please fill in your name and phone number.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -62,19 +69,32 @@ const Auth = () => {
     });
 
     if (error) {
-      toast({
-        title: "Sign Up Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Success!",
-        description: "Account created successfully. Please check your email to verify.",
-      });
-      setEmail("");
-      setPassword("");
+      toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
     }
+
+    // Create profile after signup
+    if (signUpData.user) {
+      await (supabase as any).from('profiles').insert({
+        user_id: signUpData.user.id,
+        full_name: fullName.trim(),
+        phone: phone.trim(),
+        location: location.trim(),
+        referral_source: referralSource,
+      });
+    }
+
+    toast({
+      title: "Success!",
+      description: "Account created. Please check your email to verify.",
+    });
+    setEmail("");
+    setPassword("");
+    setFullName("");
+    setPhone("");
+    setLocation("");
+    setReferralSource("");
     setLoading(false);
   };
 
@@ -82,27 +102,15 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({
-        title: "Sign In Failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Sign In Failed", description: error.message, variant: "destructive" });
     } else {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in.",
-      });
+      toast({ title: "Welcome back!", description: "You've successfully signed in." });
     }
     setLoading(false);
   };
-
-  // Demo buttons removed – use dedicated login credentials
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-mystic p-4">
@@ -124,74 +132,60 @@ const Auth = () => {
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Input id="signin-email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : 'Sign In'}
                 </Button>
-
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-3">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Label htmlFor="signup-name">Full Name *</Label>
+                  <Input id="signup-name" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <Label htmlFor="signup-email">Email *</Label>
+                  <Input id="signup-email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <p className="text-xs text-muted-foreground">A verification link will be sent to this email</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number *</Label>
+                  <Input id="signup-phone" type="tel" placeholder="+91 XXXXX XXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password *</Label>
+                  <Input id="signup-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-location">Location</Label>
+                  <Input id="signup-location" placeholder="City, State" value={location} onChange={(e) => setLocation(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>How did you find us?</Label>
+                  <Select value={referralSource} onValueChange={setReferralSource}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="website">Website</SelectItem>
+                      <SelectItem value="google">Google Search</SelectItem>
+                      <SelectItem value="random_search">Random Search</SelectItem>
+                      <SelectItem value="word_of_mouth">Word of Mouth</SelectItem>
+                      <SelectItem value="social_media">Social Media</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
-                    </>
-                  ) : (
-                    'Sign Up'
-                  )}
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</> : 'Sign Up'}
                 </Button>
               </form>
             </TabsContent>
