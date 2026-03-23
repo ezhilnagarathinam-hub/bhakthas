@@ -256,32 +256,14 @@ const Bhakthi = () => {
       setUploadingVisit(true);
       let photoUrl: string | null = null;
       if (selfieFile) {
-        // Upload into central `images` bucket and create a user_images record
-        const path = `images/user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage.from('images').upload(path, selfieFile, { upsert: true });
+        const path = `user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage.from('darshan-selfies').upload(path, selfieFile, { upsert: true });
         if (uploadErr) {
-          console.error('Images upload error details:', uploadErr);
-          if ((uploadErr as any)?.status === 404 || (uploadErr as any)?.message?.toLowerCase?.().includes('bucket')) {
-            throw new Error("Storage bucket 'images' not found. Create the bucket in Supabase storage or contact admin.");
-          }
+          console.error('Upload error:', uploadErr);
           throw uploadErr;
         }
-        const { data: publicData } = supabase.storage.from('images').getPublicUrl(path);
+        const { data: publicData } = supabase.storage.from('darshan-selfies').getPublicUrl(path);
         photoUrl = (publicData as any)?.publicUrl || null;
-
-        // record in user_images table for admin listing
-        try {
-          await (supabase as any).from('user_images').insert({
-            user_id: user.id,
-            temple_id: selectedTempleId,
-            bucket: 'images',
-            path,
-            url: photoUrl,
-            filename: selfieFile.name
-          });
-        } catch (uErr) {
-          console.warn('Could not insert user_images record:', uErr);
-        }
       }
 
       // Analyze (if not already verified via analyzeImage)
@@ -294,12 +276,15 @@ const Bhakthi = () => {
       }
 
       // Insert visit record (mark verified true by default when selfie provided)
+      const isFirstVisitToTemple = !userVisits.some(v => v.temple_id === selectedTempleId);
+      const pointsEarned = isFirstVisitToTemple ? 110 : 10; // 10 base + 100 bonus for new temple
+
       const { data: insertData, error: insertError } = await supabase
         .from('temple_visits')
         .insert({
           user_id: user.id,
           temple_id: selectedTempleId,
-          points_earned: 10,
+          points_earned: pointsEarned,
           photo_url: photoUrl,
           verified: selfieFile ? true : false,
           visit_date: new Date().toISOString().split('T')[0]
@@ -309,19 +294,29 @@ const Bhakthi = () => {
 
       if (insertError) throw insertError;
 
-      // Update user points (simple +10; bonus handled elsewhere)
-      const newTotalPoints = userScore + 10;
+      // Update user points
+      const newTotalPoints = userScore + pointsEarned;
       const newTotalVisits = totalVisits + 1;
+      const newTemplesVisited = isFirstVisitToTemple ? templesVisited + 1 : templesVisited;
+      const newDiscount = Math.min(Math.floor(newTotalPoints / 1000 * 25), 25);
+      
       const { error: updateError } = await supabase
         .from('user_bhakthi_points')
-        .update({ total_points: newTotalPoints, total_visits: newTotalVisits })
+        .update({ 
+          total_points: newTotalPoints, 
+          total_visits: newTotalVisits,
+          temples_visited: newTemplesVisited,
+          current_discount_percent: newDiscount
+        })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
       setUserScore(newTotalPoints);
       setTotalVisits(newTotalVisits);
-      toast({ title: 'Visit Recorded', description: 'Your visit has been recorded.' });
+      setTemplesVisited(newTemplesVisited);
+      setCurrentDiscount(newDiscount);
+      toast({ title: 'Visit Recorded', description: `+${pointsEarned} points earned!` });
       setVisitModalOpen(false);
       fetchUserVisits();
     } catch (err) {
@@ -556,21 +551,29 @@ const Bhakthi = () => {
                   <CardTitle>Achievements</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${templesVisited >= 1 ? 'bg-primary/10 border-primary/20' : 'bg-muted/30 border-border opacity-60'}`}>
                     <div className="flex items-center gap-3">
-                      <Trophy className="h-6 w-6 text-accent" />
+                      <Trophy className={`h-6 w-6 ${templesVisited >= 1 ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className="font-medium">First Temple Visit</span>
                     </div>
-                    <Badge variant="default">Earned</Badge>
+                    {templesVisited >= 1 ? (
+                      <Badge variant="default" className="bg-green-600">Earned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Not Earned Yet</Badge>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${userScore >= 1000 ? 'bg-primary/10 border-primary/20' : 'bg-muted/30 border-border opacity-60'}`}>
                     <div className="flex items-center gap-3">
-                      <Gift className="h-6 w-6 text-accent" />
+                      <Gift className={`h-6 w-6 ${userScore >= 1000 ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className="font-medium">1000 Points Club</span>
                     </div>
-                    <Badge variant="default">Earned</Badge>
+                    {userScore >= 1000 ? (
+                      <Badge variant="default" className="bg-green-600">Earned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Not Earned Yet</Badge>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border opacity-60">
                     <div className="flex items-center gap-3">
                       <Star className="h-6 w-6 text-muted-foreground" />
                       <span className="font-medium">Temple Explorer</span>

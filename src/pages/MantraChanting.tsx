@@ -510,94 +510,72 @@ const MantraChanting = () => {
 
         {selectedMantra && (
           <Dialog open={!!selectedMantra} onOpenChange={() => setSelectedMantra(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-              <DialogHeader>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogHeader className="shrink-0">
                 <DialogTitle className="text-2xl bg-gradient-sacred bg-clip-text text-transparent">{selectedMantra.title}</DialogTitle>
               </DialogHeader>
-              <ScrollArea className="max-h-[70vh]">
-                <div className="space-y-6 pr-4">
+              
+              {/* Split screen: mantra text on top (scrollable), counter fixed at bottom */}
+              <div className="flex flex-col flex-1 min-h-0">
+                {/* Top half: scrollable mantra text */}
+                <div className="flex-1 min-h-0 overflow-y-auto border-b border-border pb-4 pr-2" style={{ maxHeight: '40vh' }}>
                   <div className="space-y-4">
                     <div><h4 className="font-semibold text-primary mb-2">Sanskrit:</h4><p className="text-xl font-sanskrit leading-relaxed">{selectedMantra.sanskrit_text}</p></div>
                     {selectedMantra.transliteration && <div><h4 className="font-semibold text-primary mb-2">Transliteration:</h4><p className="text-lg">{selectedMantra.transliteration}</p></div>}
                     {selectedMantra.translation && <div><h4 className="font-semibold text-primary mb-2">Translation:</h4><p className="text-muted-foreground">{selectedMantra.translation}</p></div>}
                     {selectedMantra.benefits && <div><h4 className="font-semibold text-primary mb-2">Benefits:</h4><p className="text-muted-foreground">{selectedMantra.benefits}</p></div>}
                   </div>
+                </div>
 
+                {/* Bottom half: counter (always visible) */}
+                <div className="shrink-0 pt-4">
                   <Card className="shadow-divine border-primary/20">
-                    <CardContent className="p-6">
-                      <h4 className="font-semibold text-primary mb-4 text-center">Chanting Counter</h4>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold text-primary mb-3 text-center">Chanting Counter</h4>
                       
                       {/* Audio Player */}
                       {selectedMantra.audio_url && (
-                        <div className="mb-4 p-4 bg-muted/30 rounded-lg">
-                          <audio 
-                            ref={audioRef}
-                            src={selectedMantra.audio_url}
-                            preload="auto"
-                          />
+                        <div className="mb-3 p-3 bg-muted/30 rounded-lg">
+                          <audio ref={audioRef} src={selectedMantra.audio_url} preload="auto" />
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-muted-foreground">Audio Mantra</span>
                             <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  const link = document.createElement('a');
-                                  link.href = selectedMantra.audio_url!;
-                                  link.download = `${selectedMantra.title.replace(/\s+/g, '_')}.mp3`;
-                                  link.target = '_blank';
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                  toast({
-                                    title: "Download Started",
-                                    description: `Downloading ${selectedMantra.title} audio`,
-                                  });
-                                }}
-                              >
+                              <Button size="sm" variant="outline" onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = selectedMantra.audio_url!;
+                                link.download = `${selectedMantra.title.replace(/\s+/g, '_')}.mp3`;
+                                link.target = '_blank';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                toast({ title: "Download Started", description: `Downloading ${selectedMantra.title} audio` });
+                              }}>
                                 <Download className="h-4 w-4 mr-1" />
                                 Download
                               </Button>
-                              <Badge variant="secondary">
-                                {audioRepeatCount + 1} / {target}
-                              </Badge>
+                              <Badge variant="secondary">{audioRepeatCount + 1} / {target}</Badge>
                             </div>
                           </div>
-                          <Button 
-                            onClick={toggleAudioPlayback}
-                            variant={isPlaying ? "destructive" : "default"}
-                            className="w-full"
-                            disabled={isCompleted}
-                          >
-                            {isPlaying ? (
-                              <><Pause className="h-4 w-4 mr-2" />Pause Audio</>
-                            ) : (
-                              <><Play className="h-4 w-4 mr-2" />Play Audio Mantra</>
-                            )}
+                          <Button onClick={toggleAudioPlayback} variant={isPlaying ? "destructive" : "default"} className="w-full" disabled={isCompleted}>
+                            {isPlaying ? <><Pause className="h-4 w-4 mr-2" />Pause Audio</> : <><Play className="h-4 w-4 mr-2" />Play Audio Mantra</>}
                           </Button>
-                          <p className="text-xs text-muted-foreground text-center mt-2">
-                            Audio will automatically repeat {target} times
-                          </p>
                         </div>
                       )}
                       
-                      <div className="text-center space-y-4">
-                        <div className={`text-6xl font-bold ${isCompleted ? 'text-primary' : 'bg-gradient-sacred bg-clip-text text-transparent'}`}>{count}</div>
-                        <div className="text-xl font-semibold text-muted-foreground">/ {target}</div>
+                      <div className="text-center space-y-3">
+                        <div className={`text-5xl font-bold ${isCompleted ? 'text-primary' : 'bg-gradient-sacred bg-clip-text text-transparent'}`}>{count}</div>
+                        <div className="text-lg font-semibold text-muted-foreground">/ {target}</div>
                         {isCompleted && <Badge className="text-lg px-4 py-2 bg-gradient-sacred text-white">🎉 Completed! 🎉</Badge>}
-                        <div className="flex justify-center gap-3 flex-wrap pt-4">
-                          <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="lg" disabled={isCompleted || isPlaying}>{isListening ? <><MicOff className="h-5 w-5 mr-2" />Stop</> : <><Mic className="h-5 w-5 mr-2" />Voice Chant</>}</Button>
-                          <Button onClick={manualIncrement} variant="divine" size="lg" disabled={isCompleted || count >= target || isPlaying}>+1 Manual</Button>
-                          <Button onClick={resetCounter} variant="outline" size="lg"><RotateCcw className="h-5 w-5 mr-2" />Reset</Button>
+                        <div className="flex justify-center gap-2 flex-wrap pt-2">
+                          <Button onClick={toggleListening} variant={isListening ? "destructive" : "sacred"} size="default" disabled={isCompleted || isPlaying}>{isListening ? <><MicOff className="h-4 w-4 mr-1" />Stop</> : <><Mic className="h-4 w-4 mr-1" />Voice Chant</>}</Button>
+                          <Button onClick={manualIncrement} variant="divine" size="default" disabled={isCompleted || count >= target || isPlaying}>+1 Manual</Button>
+                          <Button onClick={resetCounter} variant="outline" size="default"><RotateCcw className="h-4 w-4 mr-1" />Reset</Button>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Use Voice Chant to count your spoken mantras, or Manual counter for mala beads
-                        </p>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-              </ScrollArea>
+              </div>
             </DialogContent>
           </Dialog>
         )}
