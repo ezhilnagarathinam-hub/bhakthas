@@ -556,21 +556,29 @@ const Bhakthi = () => {
                   <CardTitle>Achievements</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${templesVisited >= 1 ? 'bg-primary/10 border-primary/20' : 'bg-muted/30 border-border opacity-60'}`}>
                     <div className="flex items-center gap-3">
-                      <Trophy className="h-6 w-6 text-accent" />
+                      <Trophy className={`h-6 w-6 ${templesVisited >= 1 ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className="font-medium">First Temple Visit</span>
                     </div>
-                    <Badge variant="default">Earned</Badge>
+                    {templesVisited >= 1 ? (
+                      <Badge variant="default" className="bg-green-600">Earned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Not Earned Yet</Badge>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className={`flex items-center justify-between p-3 rounded-lg border ${userScore >= 1000 ? 'bg-primary/10 border-primary/20' : 'bg-muted/30 border-border opacity-60'}`}>
                     <div className="flex items-center gap-3">
-                      <Gift className="h-6 w-6 text-accent" />
+                      <Gift className={`h-6 w-6 ${userScore >= 1000 ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className="font-medium">1000 Points Club</span>
                     </div>
-                    <Badge variant="default">Earned</Badge>
+                    {userScore >= 1000 ? (
+                      <Badge variant="default" className="bg-green-600">Earned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Not Earned Yet</Badge>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border opacity-60">
                     <div className="flex items-center gap-3">
                       <Star className="h-6 w-6 text-muted-foreground" />
                       <span className="font-medium">Temple Explorer</span>
