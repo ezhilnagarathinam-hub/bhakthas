@@ -161,7 +161,7 @@ const Admin = ({ className }: { className?: string }) => {
           </TabsList>
 
           <TabsContent value="analytics">
-            <Analytics className="my-[106px]" />
+            <Analytics />
           </TabsContent>
 
           <TabsContent value="products">
