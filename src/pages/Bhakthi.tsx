@@ -256,32 +256,14 @@ const Bhakthi = () => {
       setUploadingVisit(true);
       let photoUrl: string | null = null;
       if (selfieFile) {
-        // Upload into central `images` bucket and create a user_images record
-        const path = `images/user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage.from('images').upload(path, selfieFile, { upsert: true });
+        const path = `user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage.from('darshan-selfies').upload(path, selfieFile, { upsert: true });
         if (uploadErr) {
-          console.error('Images upload error details:', uploadErr);
-          if ((uploadErr as any)?.status === 404 || (uploadErr as any)?.message?.toLowerCase?.().includes('bucket')) {
-            throw new Error("Storage bucket 'images' not found. Create the bucket in Supabase storage or contact admin.");
-          }
+          console.error('Upload error:', uploadErr);
           throw uploadErr;
         }
-        const { data: publicData } = supabase.storage.from('images').getPublicUrl(path);
+        const { data: publicData } = supabase.storage.from('darshan-selfies').getPublicUrl(path);
         photoUrl = (publicData as any)?.publicUrl || null;
-
-        // record in user_images table for admin listing
-        try {
-          await (supabase as any).from('user_images').insert({
-            user_id: user.id,
-            temple_id: selectedTempleId,
-            bucket: 'images',
-            path,
-            url: photoUrl,
-            filename: selfieFile.name
-          });
-        } catch (uErr) {
-          console.warn('Could not insert user_images record:', uErr);
-        }
       }
 
       // Analyze (if not already verified via analyzeImage)
