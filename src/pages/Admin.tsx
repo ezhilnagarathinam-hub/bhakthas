@@ -19,7 +19,7 @@ import ChallengeManagement from "@/components/admin/ChallengeManagement";
 import BlogManagement from "@/components/admin/BlogManagement";
 import CommunityLinkManagement from "@/components/admin/CommunityLinkManagement";
 
-const Admin = () => {
+const Admin = ({ className }: { className?: string }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
