@@ -294,12 +294,15 @@ const Bhakthi = () => {
       }
 
       // Insert visit record (mark verified true by default when selfie provided)
+      const isFirstVisitToTemple = !userVisits.some(v => v.temple_id === selectedTempleId);
+      const pointsEarned = isFirstVisitToTemple ? 110 : 10; // 10 base + 100 bonus for new temple
+
       const { data: insertData, error: insertError } = await supabase
         .from('temple_visits')
         .insert({
           user_id: user.id,
           temple_id: selectedTempleId,
-          points_earned: 10,
+          points_earned: pointsEarned,
           photo_url: photoUrl,
           verified: selfieFile ? true : false,
           visit_date: new Date().toISOString().split('T')[0]
@@ -309,19 +312,29 @@ const Bhakthi = () => {
 
       if (insertError) throw insertError;
 
-      // Update user points (simple +10; bonus handled elsewhere)
-      const newTotalPoints = userScore + 10;
+      // Update user points
+      const newTotalPoints = userScore + pointsEarned;
       const newTotalVisits = totalVisits + 1;
+      const newTemplesVisited = isFirstVisitToTemple ? templesVisited + 1 : templesVisited;
+      const newDiscount = Math.min(Math.floor(newTotalPoints / 1000 * 25), 25);
+      
       const { error: updateError } = await supabase
         .from('user_bhakthi_points')
-        .update({ total_points: newTotalPoints, total_visits: newTotalVisits })
+        .update({ 
+          total_points: newTotalPoints, 
+          total_visits: newTotalVisits,
+          temples_visited: newTemplesVisited,
+          current_discount_percent: newDiscount
+        })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
       setUserScore(newTotalPoints);
       setTotalVisits(newTotalVisits);
-      toast({ title: 'Visit Recorded', description: 'Your visit has been recorded.' });
+      setTemplesVisited(newTemplesVisited);
+      setCurrentDiscount(newDiscount);
+      toast({ title: 'Visit Recorded', description: `+${pointsEarned} points earned!` });
       setVisitModalOpen(false);
       fetchUserVisits();
     } catch (err) {
