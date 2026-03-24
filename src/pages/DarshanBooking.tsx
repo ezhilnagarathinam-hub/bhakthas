@@ -130,46 +130,6 @@ const DarshanBooking = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const sendOtp = async (target: string, type: 'email' | 'phone') => {
-    if (!target) return;
-    try {
-      if (type === 'email') setSendingEmailOtp(true);
-      else setSendingPhoneOtp(true);
-
-      const res = await supabase.functions.invoke('send-otp', {
-        body: JSON.stringify({ target, type }),
-      });
-
-      if (res.error) throw new Error('Failed to send OTP');
-
-      toast({ title: 'OTP Sent', description: `OTP sent to ${type}` });
-    } catch (err) {
-      console.error('sendOtp error', err);
-      toast({ title: 'Error', description: 'Failed to send OTP', variant: 'destructive' });
-    } finally {
-      setSendingEmailOtp(false);
-      setSendingPhoneOtp(false);
-    }
-  };
-
-  const verifyOtp = async (target: string, type: 'email' | 'phone', code: string) => {
-    try {
-      const res = await supabase.functions.invoke('verify-otp', {
-        body: JSON.stringify({ target, type, code }),
-      });
-      const json = res.data;
-      if (json.ok) {
-        toast({ title: 'Verified', description: `${type} verified` });
-        if (type === 'email') setEmailVerified(true);
-        else setPhoneVerified(true);
-      } else {
-        toast({ title: 'Invalid OTP', description: json.reason || 'Invalid or expired OTP', variant: 'destructive' });
-      }
-    } catch (err) {
-      console.error('verifyOtp error', err);
-      toast({ title: 'Error', description: 'Failed to verify OTP', variant: 'destructive' });
-    }
-  };
 
   const handleTicketChange = (newCount: number) => {
     setNumberOfTickets(newCount);
