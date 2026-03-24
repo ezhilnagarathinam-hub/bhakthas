@@ -173,6 +173,7 @@ const Auth = () => {
                       {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                     </Button>
                   </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-location">Location</Label>
                   <Input id="signup-location" placeholder="City, State" value={location} onChange={(e) => setLocation(e.target.value)} />
