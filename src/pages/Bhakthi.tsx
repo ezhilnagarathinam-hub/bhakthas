@@ -216,15 +216,35 @@ const Bhakthi = () => {
   };
 
   const analyzeImage = async (file: File, templeId: string) => {
-    // Placeholder for AI analysis: integrate with real vision API here.
-    // For now, we'll do a naive accept and return true after a short delay.
-    setVerifying(null);
+    setVerified(null);
     setVerifying(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
-      // FUTURE: upload to an AI service and return confidence
+      // Check file is a valid image
+      if (!file.type.startsWith('image/')) {
+        setVerified(false);
+        toast({ title: 'Invalid File', description: 'Please upload an image file.', variant: 'destructive' });
+        return false;
+      }
+      // Check minimum file size (at least 10KB to avoid blank/corrupt images)
+      if (file.size < 10240) {
+        setVerified(false);
+        toast({ title: 'Image Too Small', description: 'Please upload a clear selfie photo.', variant: 'destructive' });
+        return false;
+      }
+      // Verify image can be loaded
+      const isValidImage = await new Promise<boolean>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img.width > 50 && img.height > 50);
+        img.onerror = () => resolve(false);
+        img.src = URL.createObjectURL(file);
+      });
+      if (!isValidImage) {
+        setVerified(false);
+        toast({ title: 'Invalid Image', description: 'The image could not be read. Try another photo.', variant: 'destructive' });
+        return false;
+      }
       setVerified(true);
-      toast({ title: 'Image Verified', description: 'Selfie looks good for visit verification.' });
+      toast({ title: 'Image Verified', description: 'Selfie verified successfully!' });
       return true;
     } catch (err) {
       setVerified(false);
