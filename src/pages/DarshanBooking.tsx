@@ -546,17 +546,6 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="10-digit mobile number"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <Input
-                    placeholder="Enter OTP"
-                    value={phoneOtp}
-                    onChange={(e) => setPhoneOtp(e.target.value)}
-                    className="w-36"
-                  />
-                  <Button size="sm" onClick={() => sendOtp(formData.phone, 'phone')} disabled={sendingPhoneOtp}>Send OTP</Button>
-                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.phone, 'phone', phoneOtp)}>Verify</Button>
-                  {phoneVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
-                </div>
               </div>
             </CardContent>
           </Card>
