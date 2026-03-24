@@ -165,10 +165,6 @@ const DarshanBooking = () => {
       return;
     }
 
-    if (!emailVerified || !phoneVerified) {
-      toast({ title: 'Verification required', description: 'Please verify your email and phone via OTP before booking', variant: 'destructive' });
-      return;
-    }
 
     // Validate form data
     const validation = bookingSchema.safeParse(formData);
