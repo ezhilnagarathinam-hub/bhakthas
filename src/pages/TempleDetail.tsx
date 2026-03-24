@@ -327,7 +327,7 @@ const TempleDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Map Location */}
+        {/* Map Location - OpenStreetMap */}
         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -336,10 +336,29 @@ const TempleDetail = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">
-                Coordinates: {temple.latitude.toFixed(6)}, {temple.longitude.toFixed(6)}
+            <div className="aspect-video rounded-lg overflow-hidden">
+              <iframe
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${temple.longitude - 0.01},${temple.latitude - 0.01},${temple.longitude + 0.01},${temple.latitude + 0.01}&layer=mapnik&marker=${temple.latitude},${temple.longitude}`}
+                title={`${temple.name} Location`}
+              />
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {temple.latitude.toFixed(6)}, {temple.longitude.toFixed(6)}
               </p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${temple.latitude},${temple.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="sm">
+                  <MapPin className="h-3 w-3 mr-1" /> Open in Google Maps
+                </Button>
+              </a>
             </div>
           </CardContent>
         </Card>

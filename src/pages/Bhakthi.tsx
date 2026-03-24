@@ -257,60 +257,70 @@ const Bhakthi = () => {
 
   const confirmRecordVisit = async () => {
     if (!user || !selectedTempleId) return;
+    
+    // Must have a selfie
+    if (!selfieFile) {
+      toast({ title: 'Selfie Required', description: 'Please upload a selfie to record your visit.', variant: 'destructive' });
+      return;
+    }
+    
+    // Must be verified
+    if (verified !== true) {
+      toast({ title: 'Verify First', description: 'Please click Analyze to verify your selfie first.', variant: 'destructive' });
+      return;
+    }
+
     try {
+      setUploadingVisit(true);
+      
       // Prevent duplicate same-day visit
-      const { data: existingVisit } = await supabase
+      const today = new Date().toISOString().split('T')[0];
+      const { data: existingVisits } = await supabase
         .from('temple_visits')
-        .select('*')
+        .select('id')
         .eq('user_id', user.id)
         .eq('temple_id', selectedTempleId)
-        .gte('visit_date', new Date().toISOString().split('T')[0])
-        .single();
+        .gte('visit_date', today);
 
-      if (existingVisit) {
+      if (existingVisits && existingVisits.length > 0) {
         toast({ title: 'Already Visited', description: 'You have already recorded a visit today.', variant: 'destructive' });
         setVisitModalOpen(false);
+        setUploadingVisit(false);
         return;
       }
 
-      setUploadingVisit(true);
+      // Upload selfie
       let photoUrl: string | null = null;
-      if (selfieFile) {
-        const path = `user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage.from('darshan-selfies').upload(path, selfieFile, { upsert: true });
-        if (uploadErr) {
-          console.error('Upload error:', uploadErr);
-          throw uploadErr;
-        }
-        const { data: publicData } = supabase.storage.from('darshan-selfies').getPublicUrl(path);
-        photoUrl = (publicData as any)?.publicUrl || null;
+      const path = `user-visits/${user.id}/${Date.now()}_${selfieFile.name}`;
+      const { error: uploadErr } = await supabase.storage.from('darshan-selfies').upload(path, selfieFile, { upsert: true });
+      if (uploadErr) {
+        console.error('Upload error:', uploadErr);
+        throw uploadErr;
       }
+      const { data: publicData } = supabase.storage.from('darshan-selfies').getPublicUrl(path);
+      photoUrl = publicData?.publicUrl || null;
 
-      // Analyze (if not already verified via analyzeImage)
-      if (verified !== true && selfieFile) {
-        const ok = await analyzeImage(selfieFile, selectedTempleId);
-        if (!ok) {
-          setUploadingVisit(false);
-          return;
-        }
-      }
+      // Check if first visit to this temple
+      const { data: previousVisits } = await supabase
+        .from('temple_visits')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('temple_id', selectedTempleId);
+      
+      const isFirstVisitToTemple = !previousVisits || previousVisits.length === 0;
+      const pointsEarned = isFirstVisitToTemple ? 110 : 10;
 
-      // Insert visit record (mark verified true by default when selfie provided)
-      const isFirstVisitToTemple = !userVisits.some(v => v.temple_id === selectedTempleId);
-      const pointsEarned = isFirstVisitToTemple ? 110 : 10; // 10 base + 100 bonus for new temple
-
-      const { data: insertData, error: insertError } = await supabase
+      // Insert visit record
+      const { error: insertError } = await supabase
         .from('temple_visits')
         .insert({
           user_id: user.id,
           temple_id: selectedTempleId,
           points_earned: pointsEarned,
           photo_url: photoUrl,
-          verified: selfieFile ? true : false,
-          visit_date: new Date().toISOString().split('T')[0]
-        })
-        .select()
-        .single();
+          verified: true,
+          visit_date: today
+        });
 
       if (insertError) throw insertError;
 
@@ -336,12 +346,12 @@ const Bhakthi = () => {
       setTotalVisits(newTotalVisits);
       setTemplesVisited(newTemplesVisited);
       setCurrentDiscount(newDiscount);
-      toast({ title: 'Visit Recorded', description: `+${pointsEarned} points earned!` });
+      toast({ title: 'Visit Recorded! 🎉', description: `+${pointsEarned} points earned!` });
       setVisitModalOpen(false);
       fetchUserVisits();
     } catch (err) {
       console.error('Error confirming visit', err);
-      toast({ title: 'Error', description: 'Failed to record visit', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to record visit. Please try again.', variant: 'destructive' });
     } finally {
       setUploadingVisit(false);
     }
