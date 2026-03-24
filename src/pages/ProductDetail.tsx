@@ -150,7 +150,13 @@ const ProductDetail = () => {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <Card className="overflow-hidden">
-              <img src={product.image_url || poojaImage} alt={product.name} className="w-full h-96 object-cover" />
+              <div className="w-full h-96 flex items-center justify-center bg-muted">
+                <img 
+                  src={product.image_url || poojaImage} 
+                  alt={product.name} 
+                  className="max-w-full max-h-full object-contain" 
+                />
+              </div>
             </Card>
             <div className="grid grid-cols-3 gap-4">
               <Card className="p-4 text-center">

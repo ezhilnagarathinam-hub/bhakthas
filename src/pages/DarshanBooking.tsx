@@ -61,12 +61,6 @@ const DarshanBooking = () => {
     email: "",
     phone: "",
   });
-  const [emailOtp, setEmailOtp] = useState("");
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
-  const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
   const totalPrice = selectedPackage ? selectedPackage.price * numberOfTickets : 0;
@@ -136,46 +130,6 @@ const DarshanBooking = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const sendOtp = async (target: string, type: 'email' | 'phone') => {
-    if (!target) return;
-    try {
-      if (type === 'email') setSendingEmailOtp(true);
-      else setSendingPhoneOtp(true);
-
-      const res = await supabase.functions.invoke('send-otp', {
-        body: JSON.stringify({ target, type }),
-      });
-
-      if (res.error) throw new Error('Failed to send OTP');
-
-      toast({ title: 'OTP Sent', description: `OTP sent to ${type}` });
-    } catch (err) {
-      console.error('sendOtp error', err);
-      toast({ title: 'Error', description: 'Failed to send OTP', variant: 'destructive' });
-    } finally {
-      setSendingEmailOtp(false);
-      setSendingPhoneOtp(false);
-    }
-  };
-
-  const verifyOtp = async (target: string, type: 'email' | 'phone', code: string) => {
-    try {
-      const res = await supabase.functions.invoke('verify-otp', {
-        body: JSON.stringify({ target, type, code }),
-      });
-      const json = res.data;
-      if (json.ok) {
-        toast({ title: 'Verified', description: `${type} verified` });
-        if (type === 'email') setEmailVerified(true);
-        else setPhoneVerified(true);
-      } else {
-        toast({ title: 'Invalid OTP', description: json.reason || 'Invalid or expired OTP', variant: 'destructive' });
-      }
-    } catch (err) {
-      console.error('verifyOtp error', err);
-      toast({ title: 'Error', description: 'Failed to verify OTP', variant: 'destructive' });
-    }
-  };
 
   const handleTicketChange = (newCount: number) => {
     setNumberOfTickets(newCount);
@@ -211,10 +165,6 @@ const DarshanBooking = () => {
       return;
     }
 
-    if (!emailVerified || !phoneVerified) {
-      toast({ title: 'Verification required', description: 'Please verify your email and phone via OTP before booking', variant: 'destructive' });
-      return;
-    }
 
     // Validate form data
     const validation = bookingSchema.safeParse(formData);
@@ -585,17 +535,6 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="your@email.com"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <Input
-                    placeholder="Enter OTP"
-                    value={emailOtp}
-                    onChange={(e) => setEmailOtp(e.target.value)}
-                    className="w-36"
-                  />
-                  <Button size="sm" onClick={() => sendOtp(formData.email, 'email')} disabled={sendingEmailOtp}>Send OTP</Button>
-                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.email, 'email', emailOtp)}>Verify</Button>
-                  {emailVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
-                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
@@ -607,17 +546,6 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="10-digit mobile number"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <Input
-                    placeholder="Enter OTP"
-                    value={phoneOtp}
-                    onChange={(e) => setPhoneOtp(e.target.value)}
-                    className="w-36"
-                  />
-                  <Button size="sm" onClick={() => sendOtp(formData.phone, 'phone')} disabled={sendingPhoneOtp}>Send OTP</Button>
-                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.phone, 'phone', phoneOtp)}>Verify</Button>
-                  {phoneVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
-                </div>
               </div>
             </CardContent>
           </Card>
