@@ -61,12 +61,6 @@ const DarshanBooking = () => {
     email: "",
     phone: "",
   });
-  const [emailOtp, setEmailOtp] = useState("");
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
-  const [sendingPhoneOtp, setSendingPhoneOtp] = useState(false);
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
   const totalPrice = selectedPackage ? selectedPackage.price * numberOfTickets : 0;
