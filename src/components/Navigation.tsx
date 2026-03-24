@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Menu, X, MapPin, ShoppingBag, Home, BookOpen, LogOut, User, ShoppingCart, Shield, Trophy } from "lucide-react";
+import logoImg from "@/assets/logo.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
@@ -63,9 +64,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 bg-gradient-sacred rounded-xl flex items-center justify-center shadow-divine group-hover:scale-110 transition-transform animate-glow-pulse">
-                <span className="text-white font-bold text-xl animate-om-rotate">भ</span>
-              </div>
+              <img src={logoImg} alt="Bhakthas Logo" className="w-12 h-12 rounded-xl shadow-divine group-hover:scale-110 transition-transform animate-glow-pulse object-cover" />
               <span className="text-2xl font-bold bg-gradient-sacred bg-clip-text text-transparent font-cinzel">
                 Bhakthas
               </span>
