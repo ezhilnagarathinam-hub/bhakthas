@@ -535,17 +535,6 @@ const DarshanBooking = () => {
                   onChange={handleChange}
                   placeholder="your@email.com"
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <Input
-                    placeholder="Enter OTP"
-                    value={emailOtp}
-                    onChange={(e) => setEmailOtp(e.target.value)}
-                    className="w-36"
-                  />
-                  <Button size="sm" onClick={() => sendOtp(formData.email, 'email')} disabled={sendingEmailOtp}>Send OTP</Button>
-                  <Button size="sm" variant="outline" onClick={() => verifyOtp(formData.email, 'email', emailOtp)}>Verify</Button>
-                  {emailVerified && <span className="text-sm text-green-600 ml-2">Verified</span>}
-                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
