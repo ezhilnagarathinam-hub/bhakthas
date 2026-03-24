@@ -18,6 +18,7 @@ const Auth = () => {
   const [location, setLocation] = useState("");
   const [referralSource, setReferralSource] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
